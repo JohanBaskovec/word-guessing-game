@@ -28,7 +28,8 @@ Les points marqués **(H)** sont des **hypothèses** prises en l'absence de pré
 |---|---|
 | **Seed** | Chaîne qui détermine entièrement la partie (mots, clés, équipe qui commence). Même seed ⇒ même partie. |
 | **Grille** | Les 25 mots de la partie, dans un ordre fixe. |
-| **Clé d'une équipe** | Pour chacun des 25 mots, sa couleur pour cette équipe : `vert`, `rouge` ou `noir`. Chaque équipe a sa propre clé, **indépendante** de celle de l'autre. |
+| **Clé d'une équipe** | Pour chacun des 25 mots, sa couleur pour cette équipe : `vert`, `rouge` ou `noir`. Chaque équipe a sa propre clé ; les deux clés ne se recoupent en vert que sur les mots partagés. |
+| **Mot partagé** | Mot vert dans **les deux** clés (0 à 4 par partie, inconnu des joueurs). Trouvé par une équipe, il compte pour les deux. |
 | **Mot vert de X** | Mot que l'équipe X doit faire deviner à l'autre équipe. |
 | **Mot noir de X** | Mot mortel de la clé de X : si l'autre équipe le choisit pendant que X fait deviner, la partie est perdue. |
 | **Mot rouge de X** | Tout autre mot de la clé de X. |
@@ -54,17 +55,21 @@ Les points marqués **(H)** sont des **hypothèses** prises en l'absence de pré
 1. **25 mots** distincts tirés dans la liste de mots (mélange de Fisher-Yates, on garde les 25 premiers).
 2. **Nombre de mots verts** : `nA` puis `nB`, chacun tiré uniformément dans `{7, 8, 9, 10}`.
 3. **Nombre de mots noirs** : `mA` puis `mB`, chacun tiré dans `{1, 2}`.
-4. **Clé de A** : on mélange les indices 0 à 24 ; les `nA` premiers sont verts, les `mA` suivants noirs, le reste rouge.
-5. **Clé de B** : nouveau mélange **indépendant** des indices 0 à 24 ; les `nB` premiers sont verts, les `mB` suivants noirs, le reste rouge.
-6. **Tirage à pile ou face** pour l'équipe qui commence (toujours effectué, même s'il n'est utilisé qu'en cas d'égalité, pour que la séquence de tirages reste stable).
+4. **Nombre de mots partagés** : `k`, tiré uniformément dans `{0, 1, 2, 3, 4}`.
+5. **Clé de A** : on mélange les indices 0 à 24 ; les `nA` premiers sont verts, les `mA` suivants noirs, le reste rouge.
+6. **Mots partagés** : on mélange les mots verts de A et on en garde `k`.
+7. **Verts de B** : on mélange les mots qui ne sont **pas** verts pour A (ils peuvent être noirs ou rouges pour A) et on en garde `nB − k` ; avec les `k` mots partagés, cela fait `nB` verts pour B, dont **exactement** `k` sont aussi verts pour A.
+8. **Noirs de B** : on mélange les mots qui ne sont pas verts pour B (ils peuvent être verts pour A) et on en garde `mB`.
+9. **Tirage à pile ou face** pour l'équipe qui commence (toujours effectué, même s'il n'est utilisé qu'en cas d'égalité, pour que la séquence de tirages reste stable).
 
-> L'ordre des tirages fait partie du format : le modifier change les parties associées à chaque seed. La liste de mots est **versionnée** pour la même raison (une seed n'est reproductible qu'avec la même version de la liste).
+> L'ordre des tirages fait partie du format : le modifier change les parties associées à chaque seed. La liste de mots est **versionnée** pour la même raison (une seed n'est reproductible qu'avec la même version de la liste), de même que le format de l'état (`versionFormat`, passé à 2 avec l'introduction des mots partagés ; les parties sauvegardées au format 1 sont ignorées).
 
-### 3.3 Clés indépendantes
+### 3.3 Mots partagés et recoupements des clés
 
-Les deux clés sont tirées séparément : un même mot peut avoir **n'importe quelle combinaison** de couleurs (vert/vert, vert/noir, noir/noir, vert/rouge, etc.). C'est voulu : une équipe ne peut pas exclure un mot sous prétexte qu'il est vert dans sa propre clé.
-
-En moyenne, environ 3 à 4 mots sont verts pour les deux équipes.
+- Exactement `k` mots (0 à 4) sont **verts dans les deux clés** : ce sont les mots partagés. Leur nombre est tiré par la seed et **jamais annoncé** aux joueurs ; ils ne sont pas non plus signalés dans la vue « faire deviner » (un mot partagé s'affiche vert comme les autres).
+- Les autres recoupements restent libres : un mot peut être vert/noir, noir/vert, noir/noir, rouge/vert, etc. Une équipe ne peut donc pas exclure un mot sous prétexte qu'il est rouge ou vert dans sa propre clé.
+- Les `nA` et `nB` mots verts **incluent** les mots partagés. Il y a donc `nA + nB − k` mots verts distincts à trouver en tout, soit au plus 20 (le tirage garde toujours assez de place : `nA + nB − k ≤ 25`).
+- Les joueurs peuvent déduire qu'un mot était partagé au moment où il est trouvé (annonce dans l'écran de résultat, 5.5) ou en voyant baisser le nombre de mots restants de l'autre équipe.
 
 ### 3.4 Nombre de tours
 
@@ -197,15 +202,15 @@ Interaction :
 
 | Résultat | Effet |
 |---|---|
-| **Vert de X** | Retour visuel positif. La carte devient blanche vide pour Y. Restants de X −1. Si les restants de A **et** de B valent 0 → **VICTOIRE**. Sinon, si la limite nombre + 1 est atteinte ou si les restants de X valent 0 → fin de manche. Sinon, Y continue. |
+| **Vert de X** | Retour visuel positif. La carte devient blanche vide pour Y. Restants de X −1. **Si le mot est aussi vert dans la clé de Y (mot partagé)**, il est aussi marqué trouvé pour Y : restants de Y −1, et l'écran de résultat l'annonce (« Mot partagé ! Il comptait aussi pour l'équipe Y. »). Si les restants de A **et** de B valent 0 → **VICTOIRE**. Sinon, si la limite nombre + 1 est atteinte ou si les restants de X valent 0 → fin de manche. Sinon, Y continue. |
 | **Rouge de X** | Retour visuel négatif. La carte devient grise pour Y. Fin de manche. |
 | **Noir de X** | **DÉFAITE** immédiate. |
 
 3. Un bouton **« Arrêter de deviner »**, disponible à tout moment de la manche, y compris avant la première proposition, permet à Y de la terminer volontairement.
 
-Un mot vert dans les deux clés est suivi **séparément** de chaque côté : le trouver pour X ne le compte pas comme trouvé pour Y.
+Un mot partagé trouvé est marqué trouvé **pour les deux équipes** : il devient une carte vide pour Y, et quand Y fait deviner à son tour, il apparaît dans sa vue comme un mot vert déjà trouvé (atténué, ✓), non sélectionnable. Un mot n'est jamais compté deux fois.
 
-Seule la clé de **X** compte pendant la manche : la couleur du mot dans la clé de Y n'a aucun effet.
+Hors mots partagés, seule la clé de **X** compte pendant la manche : la couleur du mot dans la clé de Y n'a aucun effet (un mot rouge ou noir pour Y reste un mot vert pour X, etc.).
 
 **Écran de résultat** : après chaque « Valider », un écran plein format affiche pendant ≈ 1,6 s (ou jusqu'au toucher, après 0,4 s) le mot choisi sur fond vert, rouge ou noir (« Bravo ! », « Raté… », « Mot mortel ! ») et la suite : « Vous pouvez continuer. », « Fin de votre tour. », « C'était le dernier mot ! » ou la défaite. La logique avance immédiatement ; seul l'affichage attend.
 
@@ -222,7 +227,7 @@ Dans les cas 2 et 3, l'équipe désignée a forcément au moins un tour, grâce 
 ### 5.7 FIN DE PARTIE
 
 - Message de **victoire** (« Youpi, tout le monde a gagné ! ») ou de **défaite** avec la cause (« Mot mortel : *X* » / « Plus de tours »).
-- Révélation des deux clés (bascule A/B ou affichage côte à côte), avec les mots trouvés et les erreurs.
+- Révélation des deux clés (bascule A/B ou affichage côte à côte), avec les mots trouvés (✓), les erreurs (✗) et les mots partagés (⇄), et le nombre de mots partagés de la partie.
 - Récapitulatif : indices donnés par chaque équipe et mots trouvés pour chacun.
 - Bouton **« Nouvelle partie »** → nouvelle seed, retour en PRÉPARATION.
 
@@ -238,16 +243,17 @@ L'état complet est un objet sérialisable en JSON (pour la sauvegarde, voir 8.3
 | `versionMots` | nombre | Version de la liste de mots utilisée. |
 | `seed` | chaîne | Seed de la partie. |
 | `mots` | 25 chaînes | La grille. |
-| `cle.A`, `cle.B` | 25 valeurs `vert`/`rouge`/`noir` | Les deux clés, indépendantes. |
+| `cle.A`, `cle.B` | 25 valeurs `vert`/`rouge`/`noir` | Les deux clés ; elles ont exactement `nbPartages` mots verts en commun. |
+| `nbPartages` | nombre (0 à 4) | Nombre de mots partagés (révélé à la fin de la partie). |
 | `tours.A`, `tours.B` | nombres | Tours restants. |
-| `trouves.A`, `trouves.B` | listes d'indices | Verts de A (resp. B) déjà trouvés par l'autre équipe. Ce sont aussi les cartes vides dans la vue « deviner » de B (resp. A). |
+| `trouves.A`, `trouves.B` | listes d'indices | Verts de A (resp. B) déjà trouvés : par l'autre équipe, ou via un mot partagé trouvé par l'une ou l'autre. Un mot partagé figure dans les deux listes. Ce sont aussi les cartes vides dans la vue « deviner » de B (resp. A). |
 | `erreurs.A`, `erreurs.B` | listes d'indices | Mots que A (resp. B) a proposés à tort en devinant (gris dans sa vue). |
 | `pret.A`, `pret.B` | booléens | Cases de préparation. |
 | `ecran` | énumération | `preparation`, `compteARebours`, `passageDonneuse`, `indice`, `passageDevineuse`, `devinette`, `fin`. |
 | `donneuse` | `A` / `B` | Équipe qui fait deviner dans la manche courante. |
 | `indice` | objet ou vide | `{ mot, nombre, trouvesCetteManche }`. |
 | `selection` | indice ou vide | Carte sélectionnée en devinette. |
-| `historique` | liste | Indices donnés : `{ equipe, mot, nombre, propositions: [{ indice, resultat }], arretVolontaire }`. |
+| `historique` | liste | Indices donnés : `{ equipe, mot, nombre, propositions: [{ indice, resultat, partage }], arretVolontaire }`. |
 | `resultat` | vide / `victoire` / `defaite` | Avec la cause de la défaite. |
 
 La **logique du jeu** (fonctions pures : état + action → nouvel état) est séparée de l'**affichage**, ce qui permet de la tester sans navigateur (voir 8.5).
@@ -344,7 +350,9 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 - Cas à couvrir :
   - même seed ⇒ même partie ; seeds différentes ⇒ parties différentes ;
   - 25 mots distincts ; dans chaque clé, 7 ≤ verts ≤ 10 et 1 ≤ noirs ≤ 2, sans recouvrement à l'intérieur d'une clé ;
-  - les deux clés sont bien indépendantes (des recouvrements entre clés apparaissent sur un échantillon de seeds) ;
+  - exactement `nbPartages` mots verts en commun entre les deux clés, `nbPartages` toujours entre 0 et 4 et chaque valeur possible sur un échantillon de seeds ;
+  - les autres combinaisons de couleurs entre clés (vert/noir, noir/noir…) apparaissent aussi ;
+  - mot partagé : trouvé par une équipe, il compte pour les deux (restants, victoire, jamais compté deux fois) ; mot non partagé : seule la clé de la donneuse avance ;
   - calcul des tours (7→4, 8→4, 9→5, 10→5) ;
   - équipe qui commence : celle qui a le plus de verts, tirage en cas d'égalité ;
   - nombre annoncé borné par les restants de la donneuse ; limite nombre + 1 en devinette, y compris avec 0 ;
@@ -373,9 +381,10 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 | Paramètre | Valeur |
 |---|---|
 | Mots dans la grille | 25 |
-| Mots verts par équipe | 7 à 10 (indépendants pour A et B) |
+| Mots verts par équipe | 7 à 10 (indépendants pour A et B), mots partagés inclus |
 | Mots noirs par équipe | 1 à 2 (indépendants pour A et B) |
-| Recouvrement entre les clés | Libre (toute combinaison possible) |
+| Mots partagés (verts des deux côtés) | 0 à 4, nombre inconnu des joueurs ; trouvés par une équipe, ils comptent pour les deux |
+| Autres recoupements entre les clés | Libres (vert/noir, noir/noir, rouge/vert…) |
 | Tours par équipe | ⌈verts / 2⌉ |
 | Nombre annoncé avec un indice | 0 aux restants de la donneuse |
 | Mots trouvables par manche | au plus nombre + 1 |
@@ -390,5 +399,5 @@ Aucune pour l'instant.
 
 Décisions récentes :
 
-- Un mot vert pour A **et** pour B est suivi **séparément** de chaque côté : s'il est trouvé par B sur un indice de A, A doit encore le trouver sur un indice de B, et il reste affiché normalement dans la vue « deviner » de A.
+- **Mots partagés** (remplacent la règle précédente, où un mot vert des deux côtés devait être trouvé deux fois) : entre 0 et 4 mots sont verts pour les deux équipes, nombre tiré par la seed et inconnu des joueurs. Trouvé par une équipe, un mot partagé compte pour les deux. Le jeu l'annonce au moment où il est trouvé, ce qui rend le partage visible mais pas anticipable.
 - L'équipe qui devine peut appuyer sur « Arrêter de deviner » **avant toute proposition** (elle passe alors son tour).

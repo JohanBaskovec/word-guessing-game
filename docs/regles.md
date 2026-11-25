@@ -24,8 +24,15 @@ Le jeu tire au hasard, à partir d'une **seed** (graine) :
 
 Les deux équipes n'ont pas forcément le même nombre de mots verts (par exemple 10 pour A et 8 pour B).
 
-**Les deux clés sont indépendantes.** Un même mot peut être vert pour A **et** vert pour B, vert pour l'une et noir pour l'autre, noir pour les deux… Ce n'est pas parce qu'un mot est vert pour votre équipe qu'il ne peut pas être celui que l'autre équipe essaie de vous faire deviner !
-Un mot vert des deux côtés doit être trouvé **deux fois** : une fois par chaque équipe, chacune sur un indice de l'autre.
+**Les deux clés se recoupent.** Un mot peut être vert pour une équipe et noir pour l'autre, noir pour les deux, rouge pour l'une et vert pour l'autre… Ce n'est pas parce qu'un mot est rouge ou vert pour votre équipe qu'il l'est aussi pour l'autre !
+
+### Les mots partagés
+
+Entre **0 et 4 mots** sont verts **pour les deux équipes** : ce sont des **mots partagés**. Personne ne sait combien il y en a, ni lesquels.
+
+Quand une équipe trouve un mot partagé, il compte **pour les deux équipes** : l'autre équipe n'aura plus à le faire deviner. Il disparaît de la grille pour tout le monde, et le nombre de mots restants à faire deviner de l'équipe qui devine baisse aussi. Les mots partagés sont donc un petit bonus… à condition de tomber dessus.
+
+Le nombre de mots verts de chaque équipe (7 à 10) **inclut** ses mots partagés.
 
 ### Nombre de tours
 
@@ -69,7 +76,7 @@ Les équipes alternent entre deux rôles : **faire deviner** et **deviner**.
 2. L'indice et le nombre sont affichés en bas de l'écran.
 3. L'équipe Y peut trouver **jusqu'à une fois de plus que le nombre annoncé** (avec « 2 », elle peut trouver jusqu'à 3 mots ; avec « 0 », jusqu'à 1 mot).
 4. L'équipe touche un mot, puis appuie sur **« Valider »**. Trois cas :
-   - **Mot vert (correct)** : bravo ! La carte disparaît et l'équipe peut continuer, jusqu'à la limite ci-dessus.
+   - **Mot vert (correct)** : bravo ! La carte disparaît et l'équipe peut continuer, jusqu'à la limite ci-dessus. Si c'est un **mot partagé**, le jeu l'annonce : il compte aussi pour l'équipe Y.
    - **Mot rouge (incorrect)** : la carte devient grise et l'équipe Y arrête de deviner pour ce tour.
    - **Mot noir (mortel)** : **la partie est perdue pour tout le monde**.
 5. À tout moment, même avant sa première proposition, l'équipe Y peut appuyer sur **« Arrêter de deviner »** pour finir son tour sans prendre de risque.
@@ -89,4 +96,4 @@ Quand l'équipe Y a fini de deviner :
   - ou une équipe n'a **plus de tours** alors qu'il lui reste des mots à faire deviner : la partie s'arrête aussitôt.
   - ou les joueurs **abandonnent** (lien « Abandonner la partie » sur les écrans où l'on se passe le téléphone).
 
-À la fin, les clés des deux équipes sont révélées et on peut lancer une nouvelle partie.
+À la fin, les clés des deux équipes sont révélées (avec le nombre de mots partagés) et on peut lancer une nouvelle partie.

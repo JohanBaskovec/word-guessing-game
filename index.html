@@ -507,7 +507,7 @@ button.carte:not(:disabled) { cursor: pointer; }
   var B = window.Banger = window.Banger || {};
   var R = B.Aleatoire;
 
-  var FORMAT = 1;
+  var FORMAT = 2;
   var NB_MOTS = 25;
   var ECRANS = ['preparation', 'compteARebours', 'passageDonneuse', 'indice', 'passageDevineuse', 'devinette', 'fin'];
 
@@ -534,19 +534,24 @@ button.carte:not(:disabled) { cursor: pointer; }
   // --- Création d'une partie -------------------------------------------------
 
   // Clé d'une équipe : pour chaque mot, 'vert', 'rouge' ou 'noir'.
-  function creerCle(rng, nbVerts, nbNoirs) {
-    var indices = [];
-    for (var i = 0; i < NB_MOTS; i++) indices.push(i);
-    var ordre = R.melanger(indices, rng);
+  function construireCle(verts, noirs) {
     var cle = [];
     for (var k = 0; k < NB_MOTS; k++) cle.push('rouge');
-    for (var v = 0; v < nbVerts; v++) cle[ordre[v]] = 'vert';
-    for (var n = 0; n < nbNoirs; n++) cle[ordre[nbVerts + n]] = 'noir';
+    verts.forEach(function (i) { cle[i] = 'vert'; });
+    noirs.forEach(function (i) { cle[i] = 'noir'; });
     return cle;
   }
 
+  function tousLesIndices() {
+    var t = [];
+    for (var i = 0; i < NB_MOTS; i++) t.push(i);
+    return t;
+  }
+
   // Ordre des tirages (fait partie du format, voir docs/specification.md 3.2) :
-  // mots, nA, nB, mA, mB, clé de A, clé de B, pile ou face.
+  // mots, nA, nB, mA, mB, nombre de mots partagés, mélange pour la clé de A,
+  // mélange des verts de A (choix des partagés), mélange des autres mots (verts de B),
+  // mélange pour les noirs de B, pile ou face.
   function creerPartie(seed) {
     var graine = R.normaliserSeed(seed);
     var rng = R.creerPRNG(graine);
@@ -555,8 +560,23 @@ button.carte:not(:disabled) { cursor: pointer; }
     var nB = R.entre(rng, 7, 10);
     var mA = R.entre(rng, 1, 2);
     var mB = R.entre(rng, 1, 2);
-    var cleA = creerCle(rng, nA, mA);
-    var cleB = creerCle(rng, nB, mB);
+    var nbPartages = R.entre(rng, 0, 4);
+
+    // Clé de A : nA verts puis mA noirs, parmi 25 mots mélangés.
+    var ordreA = R.melanger(tousLesIndices(), rng);
+    var vertsA = ordreA.slice(0, nA);
+    var noirsA = ordreA.slice(nA, nA + mA);
+
+    // Verts de B : exactement nbPartages verts de A (les mots partagés), le reste hors des verts de A.
+    var partages = R.melanger(vertsA, rng).slice(0, nbPartages);
+    var horsVertsA = R.melanger(tousLesIndices().filter(function (i) { return vertsA.indexOf(i) < 0; }), rng);
+    var vertsB = partages.concat(horsVertsA.slice(0, nB - nbPartages));
+
+    // Noirs de B : parmi les mots qui ne sont pas verts pour B (ils peuvent être verts pour A).
+    var noirsB = R.melanger(tousLesIndices().filter(function (i) { return vertsB.indexOf(i) < 0; }), rng).slice(0, mB);
+
+    var cleA = construireCle(vertsA, noirsA);
+    var cleB = construireCle(vertsB, noirsB);
     var pile = rng() < 0.5 ? 'A' : 'B';
     var premiere = nA > nB ? 'A' : (nB > nA ? 'B' : pile);
     return {
@@ -565,6 +585,7 @@ button.carte:not(:disabled) { cursor: pointer; }
       seed: graine,
       mots: mots,
       cle: { A: cleA, B: cleB },
+      nbPartages: nbPartages,
       tours: { A: Math.ceil(nA / 2), B: Math.ceil(nB / 2) },
       trouves: { A: [], B: [] },
       erreurs: { A: [], B: [] },
@@ -586,7 +607,12 @@ button.carte:not(:disabled) { cursor: pointer; }
     return etat.cle[equipe].filter(function (c) { return c === 'vert'; }).length;
   }
 
-  // Mots verts de l'équipe pas encore trouvés par l'autre équipe.
+  // Un mot partagé est vert pour les deux équipes : une fois trouvé, il compte pour les deux.
+  function estPartage(etat, i) {
+    return etat.cle.A[i] === 'vert' && etat.cle.B[i] === 'vert';
+  }
+
+  // Mots verts de l'équipe pas encore trouvés (par l'autre équipe, ou via un mot partagé).
   function restants(etat, equipe) {
     return nbVerts(etat, equipe) - etat.trouves[equipe].length;
   }
@@ -674,6 +700,10 @@ button.carte:not(:disabled) { cursor: pointer; }
     return c;
   }
 
+  function marquerTrouve(c, equipe, i) {
+    if (c.trouves[equipe].indexOf(i) < 0) c.trouves[equipe].push(i);
+  }
+
   function victoireAtteinte(etat) {
     return restants(etat, 'A') === 0 && restants(etat, 'B') === 0;
   }
@@ -711,7 +741,8 @@ button.carte:not(:disabled) { cursor: pointer; }
     var i = c.selection;
     c.selection = null;
     var couleur = c.cle[X][i];
-    c.historique[c.historique.length - 1].propositions.push({ indice: i, resultat: couleur });
+    var proposition = { indice: i, resultat: couleur };
+    c.historique[c.historique.length - 1].propositions.push(proposition);
     c.retour = { indice: i, mot: c.mots[i], couleur: couleur, equipe: Y, suite: 'continue' };
 
     if (couleur === 'noir') {
@@ -720,7 +751,11 @@ button.carte:not(:disabled) { cursor: pointer; }
       c.erreurs[Y].push(i);
       finDeManche(c);
     } else {
-      c.trouves[X].push(i);
+      marquerTrouve(c, X, i);
+      var partage = c.cle[Y][i] === 'vert';
+      if (partage) marquerTrouve(c, Y, i); // mot partagé : il compte aussi pour l'équipe qui devine
+      proposition.partage = partage;
+      c.retour.partage = partage;
       c.indice.trouvesCetteManche += 1;
       if (victoireAtteinte(c)) {
         terminer(c, { type: 'victoire' });
@@ -783,6 +818,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     normaliser: normaliser,
     creerPartie: creerPartie,
     nbVerts: nbVerts,
+    estPartage: estPartage,
     restants: restants,
     peutSelectionner: peutSelectionner,
     limiteManche: limiteManche,
@@ -1251,6 +1287,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     o.appendChild(el('h1', { texte: titre }));
     o.appendChild(el('div', { class: 'mot-retour', texte: encadrer(r.mot) }));
     o.appendChild(el('p', { texte: 'Ce mot' + texte }));
+    if (r.partage) o.appendChild(el('p', { class: 'partage', texte: '⇄ Mot partagé ! Il comptait aussi pour l’équipe ' + r.equipe + '.' }));
     o.appendChild(el('p', { texte: fin }));
     o.hidden = false;
 
@@ -1299,7 +1336,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     o.appendChild(el('div', { class: 'emoji', 'aria-hidden': 'true', texte: m.emoji }));
     o.appendChild(el('h1', { texte: m.titre }));
     o.appendChild(el('p', { texte: m.texte }));
-    o.appendChild(el('p', { class: 'petit', texte: 'Les clés des deux équipes vont être révélées. ✓ trouvé · ✗ proposé à tort · ☠ mortel' }));
+    o.appendChild(el('p', { class: 'petit', texte: 'Mots partagés cette partie : ' + etat.nbPartages + '. Les clés des deux équipes vont être révélées. ✓ trouvé · ✗ proposé à tort · ☠ mortel · ⇄ partagé' }));
     o.appendChild(el('button', {
       type: 'button', class: 'btn primaire gros', texte: 'Voir les clés',
       onclick: function () { ui.detailFin = false; rendre(); }
@@ -1317,7 +1354,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     etat.historique.forEach(function (h) {
       var props = h.propositions.length
         ? h.propositions.map(function (p) {
-          return etat.mots[p.indice] + ' ' + (p.resultat === 'vert' ? '✓' : (p.resultat === 'noir' ? '☠' : '✗'));
+          return etat.mots[p.indice] + ' ' + (p.resultat === 'vert' ? '✓' : (p.resultat === 'noir' ? '☠' : '✗')) + (p.partage ? ' ⇄' : '');
         }).join(' · ')
         : 'aucune proposition';
       if (h.arretVolontaire) props += ' (arrêt volontaire)';
@@ -1347,7 +1384,7 @@ button.carte:not(:disabled) { cursor: pointer; }
       var c = etat.cle[eq][i];
       var classe = c + (i === fatal ? ' fatal' : '');
       var symbole = '';
-      if (c === 'vert' && etat.trouves[eq].indexOf(i) >= 0) symbole = '✓';
+      if (c === 'vert') symbole = (J.estPartage(etat, i) ? '⇄' : '') + (etat.trouves[eq].indexOf(i) >= 0 ? '✓' : '');
       else if (c === 'rouge' && etat.erreurs[autreEq].indexOf(i) >= 0) symbole = '✗';
       else if (c === 'noir') symbole = '☠';
       return { classe: classe, symbole: symbole };

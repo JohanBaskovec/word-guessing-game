@@ -169,7 +169,7 @@ test('partie : tours 7→4, 8→4, 9→5, 10→5', () => {
   deepEqual(vus, { 7: 4, 8: 4, 9: 5, 10: 5 });
 });
 
-test('partie : les deux clés sont indépendantes (toutes les combinaisons de couleurs existent)', () => {
+test('partie : toutes les combinaisons de couleurs entre les deux clés existent (vert/vert = mots partagés)', () => {
   const combis = new Set();
   for (const seed of seeds(200)) {
     const e = J.creerPartie(seed);
@@ -177,6 +177,26 @@ test('partie : les deux clés sont indépendantes (toutes les combinaisons de co
   }
   for (const a of ['vert', 'rouge', 'noir']) for (const b of ['vert', 'rouge', 'noir']) {
     assert.ok(combis.has(a + '/' + b), 'combinaison absente : ' + a + '/' + b);
+  }
+});
+
+test('partie : entre 0 et 4 mots partagés (verts pour les deux équipes), tous les nombres apparaissent', () => {
+  const vus = new Set();
+  for (const seed of seeds(400)) {
+    const e = J.creerPartie(seed);
+    const communs = e.cle.A.filter((c, i) => c === 'vert' && e.cle.B[i] === 'vert').length;
+    assert.equal(communs, e.nbPartages, 'seed ' + seed);
+    assert.ok(e.nbPartages >= 0 && e.nbPartages <= 4);
+    for (const eq of ['A', 'B']) assert.ok(compter(e.cle[eq], 'vert') >= e.nbPartages);
+    vus.add(e.nbPartages);
+  }
+  deepEqual([...vus].sort((x, y) => x - y), [0, 1, 2, 3, 4]);
+});
+
+test('partie : estPartage correspond aux mots verts des deux clés', () => {
+  for (const seed of seeds(50)) {
+    const e = J.creerPartie(seed);
+    for (let i = 0; i < 25; i++) assert.equal(J.estPartage(e, i), e.cle.A[i] === 'vert' && e.cle.B[i] === 'vert');
   }
 });
 
@@ -440,15 +460,71 @@ test('victoire : tous les mots verts des deux équipes trouvés', () => {
   assert.equal(e.retour.suite, 'victoire');
 });
 
-test('un mot vert des deux côtés est suivi séparément pour chaque équipe', () => {
-  const e0 = chercher((p) => p.cle.A.some((c, i) => c === 'vert' && p.cle.B[i] === 'vert'));
+test('mot partagé : trouvé par une équipe, il compte aussi pour l’autre', () => {
+  const e0 = chercher((p) => p.nbPartages >= 1);
   let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
   const X = e.donneuse, Y = J.autre(X);
   const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] === 'vert');
+  const restantsY = J.restants(e, Y);
   e = J.validerSelection(J.selectionner(donnerIndice(e, 1), i));
   assert.ok(e.trouves[X].includes(i));
-  assert.ok(!e.trouves[Y].includes(i), 'le mot n’est pas trouvé pour l’autre clé');
-  assert.equal(J.restants(e, Y), J.nbVerts(e, Y));
+  assert.ok(e.trouves[Y].includes(i), 'le mot est aussi trouvé pour l’autre clé');
+  assert.equal(J.restants(e, Y), restantsY - 1);
+  assert.equal(e.retour.partage, true);
+  assert.equal(e.historique[0].propositions[0].partage, true);
+  // La carte n'est plus sélectionnable, ni pour X ni pour Y quand elle devinera.
+  assert.equal(J.peutSelectionner(e, i), false);
+});
+
+test('mot non partagé : seule la clé de la donneuse avance', () => {
+  const e0 = chercher((p) => p.cle.A.some((c, i) => c === 'vert' && p.cle.B[i] !== 'vert'));
+  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  const X = e.donneuse, Y = J.autre(X);
+  const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] !== 'vert');
+  const restantsY = J.restants(e, Y);
+  e = J.validerSelection(J.selectionner(donnerIndice(e, 1), i));
+  assert.ok(!e.trouves[Y].includes(i));
+  assert.equal(J.restants(e, Y), restantsY);
+  assert.equal(e.retour.partage, false);
+});
+
+test('mot partagé : l’autre équipe n’a plus à le deviner quand elle fait deviner à son tour', () => {
+  const e0 = chercher((p) => p.nbPartages >= 1);
+  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  const X = e.donneuse, Y = J.autre(X);
+  const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] === 'vert');
+  e = J.validerSelection(J.selectionner(donnerIndice(e, 0), i)); // « 0 » : un seul mot, la manche s'arrête
+  assert.equal(e.donneuse, Y);
+  e = J.confirmerPassage(e);
+  const attendu = J.nbVerts(e, Y) - 1;
+  assert.equal(J.restants(e, Y), attendu);
+  assert.ok(e.cle[Y][i] === 'vert' && e.trouves[Y].includes(i));
+});
+
+test('mot partagé : un mot partagé n’est jamais compté deux fois (pas de restants négatifs)', () => {
+  const e0 = chercher((p) => p.nbPartages >= 1);
+  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  const X = e.donneuse, Y = J.autre(X);
+  const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] === 'vert');
+  e.trouves[Y] = [i]; // déjà trouvé côté Y par un autre moyen
+  e = J.validerSelection(J.selectionner(donnerIndice(e, 1), i));
+  assert.equal(e.trouves[Y].filter((k) => k === i).length, 1);
+});
+
+test('mot partagé : victoire quand tous les mots sont trouvés, y compris grâce aux mots partagés', () => {
+  const e0 = chercher((p) => p.nbPartages >= 1);
+  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  const X = e.donneuse, Y = J.autre(X);
+  const vX = indicesDe(e, X, 'vert');
+  const vY = indicesDe(e, Y, 'vert');
+  const partages = vX.filter((i) => e.cle[Y][i] === 'vert');
+  // Tout est trouvé sauf les mots non partagés de Y... qu'on marque déjà trouvés, et un seul mot partagé de X.
+  const dernier = partages[0];
+  e.trouves[X] = vX.filter((i) => i !== dernier);
+  e.trouves[Y] = vY.filter((i) => i !== dernier);
+  e = J.validerSelection(J.selectionner(donnerIndice(e, 1), dernier));
+  assert.equal(e.ecran, 'fin');
+  assert.equal(e.resultat.type, 'victoire');
 });
 
 test('défaite immédiate : une équipe n’a plus de tours alors qu’il lui reste des mots', () => {
@@ -539,6 +615,7 @@ test('reprise : les états incompatibles ou corrompus sont refusés', () => {
   assert.equal(J.etatValide(null), false);
   assert.equal(J.etatValide({}), false);
   assert.equal(J.etatValide(Object.assign({}, e, { versionFormat: 999 })), false);
+  assert.equal(J.etatValide(Object.assign({}, e, { versionFormat: 1 })), false, 'les parties du format 1 (sans mots partagés) sont ignorées');
   assert.equal(J.etatValide(Object.assign({}, e, { versionMots: 999 })), false);
   assert.equal(J.etatValide(Object.assign({}, e, { mots: ['a'] })), false);
   assert.equal(J.etatValide(Object.assign({}, e, { ecran: 'nimportequoi' })), false);
