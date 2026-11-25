@@ -12,6 +12,16 @@ Le jeu est **coopératif** : soit tout le monde gagne, soit tout le monde perd.
 - Au moins 2 joueurs, sans limite haute, répartis en deux équipes A et B (au moins un joueur par équipe).
   Le jeu ne demande ni le nombre de joueurs ni leurs noms.
 
+## Configuration de la partie
+
+Avant de commencer, le bouton **« ⚙ Réglages »** de l'écran de préparation permet de choisir :
+
+- le **nom de chaque équipe** (16 caractères au plus, deux noms différents) : à la place de « Équipe A » et « Équipe B » dans tout le jeu ;
+- le **nombre de mots noirs** par équipe, de 0 à 6 (3 par défaut) ;
+- les **noms propres** à utiliser, par catégorie : pays et continents, villes, régions / fleuves / monuments / planètes, personnalités, personnages et légendes, marques / films / jeux / fêtes. Une catégorie décochée n'est plus tirée ; les noms communs restent toujours.
+
+Valider les réglages génère une nouvelle grille. Ils sont conservés pour les parties suivantes.
+
 ## Mise en place
 
 Le jeu tire au hasard, à partir d'une **seed** (graine) :
@@ -19,7 +29,7 @@ Le jeu tire au hasard, à partir d'une **seed** (graine) :
 - **25 mots** connus de tous (noms communs ou noms propres) ;
 - pour **chaque équipe**, une **clé secrète** :
   - **9 mots verts** : les mots que cette équipe doit faire deviner à l'autre ;
-  - **3 mots noirs (mortels)** : si l'autre équipe en choisit un, la partie est perdue ;
+  - **3 mots noirs (mortels)** par défaut (réglable de 0 à 6) : si l'autre équipe en choisit un, la partie est perdue ;
   - tous les autres mots sont **rouges** : ils ne sont pas à faire deviner.
 
 **Les deux clés se recoupent.** Un mot peut être vert pour une équipe et noir pour l'autre, noir pour les deux, rouge pour l'une et vert pour l'autre… Ce n'est pas parce qu'un mot est rouge ou vert pour votre équipe qu'il l'est aussi pour l'autre !

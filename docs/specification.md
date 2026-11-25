@@ -29,9 +29,10 @@ Les points marqués **(H)** sont des **hypothèses** prises en l'absence de pré
 | **Seed** | Chaîne qui détermine entièrement la partie (mots, clés, équipe qui commence). Même seed ⇒ même partie. |
 | **Grille** | Les 25 mots de la partie, dans un ordre fixe. |
 | **Clé d'une équipe** | Pour chacun des 25 mots, sa couleur pour cette équipe : `vert`, `rouge` ou `noir`. Chaque équipe a sa propre clé ; les deux clés ne se recoupent en vert que sur les mots partagés. |
+| **Configuration** | Réglages choisis par les joueurs avant la partie : nom des équipes, nombre de mots noirs, catégories de noms propres utilisées (3.7). |
 | **Mot partagé** | Mot vert dans **les deux** clés (3 par partie, sans qu'on sache lesquels). Trouvé par une équipe, il compte pour les deux. |
 | **Mot vert de X** | Mot que l'équipe X doit faire deviner à l'autre équipe. |
-| **Mot noir de X** | Mot mortel de la clé de X : si l'autre équipe le choisit pendant que X fait deviner, la partie est perdue. |
+| **Mot noir de X** | Mot mortel de la clé de X (3 par défaut, configurable) : si l'autre équipe le choisit pendant que X fait deviner, la partie est perdue. |
 | **Mot rouge de X** | Tout autre mot de la clé de X. |
 | **Équipe donneuse** | Équipe qui donne l'indice (elle voit sa clé). |
 | **Équipe devineuse** | Équipe qui devine (elle ne voit aucune clé). |
@@ -52,14 +53,16 @@ Les points marqués **(H)** sont des **hypothèses** prises en l'absence de pré
 
 ### 3.2 Tirages (dans cet ordre, toujours le même)
 
-1. **25 mots** distincts tirés dans la liste de mots (mélange de Fisher-Yates, on garde les 25 premiers).
-2. **Clé de A** : on mélange les indices 0 à 24 ; les 9 premiers sont verts, les 3 suivants noirs, le reste rouge. (Les nombres de mots verts, 9 par équipe, de mots noirs, 3 par équipe, de mots partagés, 3, et de tours, 9, sont fixes : aucun tirage.)
+1. **25 mots** distincts tirés dans le lot de mots disponibles (noms communs, puis noms propres des catégories activées dans la configuration, dans l'ordre de la liste ; mélange de Fisher-Yates, on garde les 25 premiers).
+2. **Clé de A** : on mélange les indices 0 à 24 ; les 9 premiers sont verts, les `noirs` suivants noirs (`noirs` vient de la configuration, 3 par défaut), le reste rouge. (Les nombres de mots verts, 9 par équipe, de mots partagés, 3, et de tours, 9, sont fixes ; le nombre de noirs est un réglage : aucun de ces nombres n'est tiré.)
 3. **Mots partagés** : on mélange les mots verts de A et on en garde 3.
 4. **Verts de B** : on mélange les mots qui ne sont **pas** verts pour A (ils peuvent être noirs ou rouges pour A) et on en garde 6 ; avec les 3 mots partagés, cela fait 9 verts pour B, dont **exactement** 3 sont aussi verts pour A.
-5. **Noirs de B** : on mélange les mots qui ne sont pas verts pour B (ils peuvent être verts, rouges ou noirs pour A) et on en garde 3.
+5. **Noirs de B** : on mélange les mots qui ne sont pas verts pour B (ils peuvent être verts, rouges ou noirs pour A) et on en garde `noirs`.
 6. **Tirage à pile ou face** pour l'équipe qui commence.
 
-> L'ordre des tirages fait partie du format : le modifier change les parties associées à chaque seed. La liste de mots est **versionnée** pour la même raison (une seed n'est reproductible qu'avec la même version de la liste), de même que le format de l'état (`versionFormat`, passé à 4 avec les 3 mots noirs par équipe ; les parties sauvegardées dans un format précédent sont ignorées).
+> L'ordre des tirages fait partie du format : le modifier change les parties associées à chaque seed. La liste de mots est **versionnée** pour la même raison (une seed n'est reproductible qu'avec la même version de la liste), de même que le format de l'état (`versionFormat`, passé à 5 avec la configuration ; les parties sauvegardées dans un format précédent sont ignorées).
+>
+> Une partie dépend donc de la **seed**, de la **version de la liste**, et des réglages qui changent le tirage : **nombre de mots noirs** et **catégories activées**. Les noms des équipes n'influencent pas le tirage.
 
 ### 3.3 Mots partagés et recoupements des clés
 
@@ -80,17 +83,40 @@ Les deux équipes ayant le même nombre de mots verts, l'équipe qui commence es
 
 Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, clés, équipe qui commence). Les cases « prête » des deux équipes sont décochées.
 
+### 3.7 Configuration
+
+Les noms d'équipe configurés remplacent « Équipe A » / « Équipe B » dans **tous** les textes du jeu (préparation, passage, bandeaux, annonce d'un mot partagé, mot mortel, clés révélées, récapitulatif). Les textes sont formulés pour ne dépendre ni du genre ni du nombre du nom (« Mot partagé ! Il comptait aussi pour *Les Lions*. »).
+
+Une page **« Configuration »** (bouton **« ⚙ Réglages »** de l'écran de préparation, 5.1) permet de régler :
+
+| Réglage | Valeurs | Défaut |
+|---|---|---|
+| **Nom de chaque équipe** | texte libre, 16 caractères au plus, espaces superflus supprimés ; un champ vide revient au nom par défaut ; les deux noms doivent être différents (comparaison insensible à la casse et aux accents) | « Équipe A », « Équipe B » |
+| **Mots noirs par équipe** | de **0 à 6**, même nombre pour les deux équipes | 3 |
+| **Noms propres** | une case à cocher par catégorie (6) ; tout décocher est permis : il reste alors les noms communs | toutes cochées |
+
+- Les catégories de noms propres sont : *Pays et continents*, *Villes*, *Régions, fleuves, monuments et planètes*, *Personnalités*, *Personnages et légendes*, *Marques, films, jeux et fêtes* (6 catégories ; voir section 4). Chacune affiche son nombre de mots et trois exemples. Les boutons « Tout cocher » et « Tout décocher » agissent sur toutes les catégories, et le nombre total de mots disponibles est affiché.
+- **Valider** enregistre la configuration (mémorisée à part dans `localStorage`, elle sert pour toutes les parties suivantes) et **génère une nouvelle grille avec la même seed** (le tirage change si les noirs ou les catégories ont changé). **Annuler** ferme la page sans rien changer. « Valider » est désactivé tant que les noms sont identiques.
+- La configuration est copiée dans l'état de la partie (`config`) : « Changer les mots », « Nouvelle partie » et la reprise après rechargement la conservent.
+- Elle n'est accessible que depuis la PRÉPARATION (jamais en cours de partie).
+- Les noms propres sont des mots comme les autres une fois tirés : ils ne sont ni signalés, ni traités à part pendant la partie.
+
 ---
 
 ## 4. Liste de mots
 
-- Intégrée à `index.html` (un tableau de chaînes) avec un numéro de version.
-- Uniquement des **noms communs** et **noms propres** **très connus de tous**, adultes comme enfants (ex. : *chat*, *maison*, *soleil*, *pomme*, *Paris*, *Napoléon*, *Lune*…).
+- Intégrée à `index.html` avec un numéro de version (`MOTS_VERSION`, 3 aujourd'hui).
+- Deux ensembles :
+  - **`MOTS_COMMUNS`** : les noms communs, toujours utilisés (1 309 mots) ;
+  - **`CATEGORIES`** : les noms propres, rangés en 6 catégories (identifiant, libellé, mots) que la configuration active ou non : *pays* (Pays et continents, 49 mots), *villes* (34), *lieux* (Régions, fleuves, monuments et planètes, 41), *personnalites* (24), *personnages* (Personnages et légendes, 45), *marques* (Marques, films, jeux et fêtes, 12). `MOTS` est la liste complète (1 514 mots).
+- **Convention vérifiée par un test** : un nom commun commence par une **minuscule**, un nom propre par une **majuscule** et appartient à une catégorie.
+- Uniquement des mots **très connus de tous**, adultes comme enfants (ex. : *chat*, *maison*, *soleil*, *pomme*, *Paris*, *Napoléon*, *Lune*…).
 - À éviter : mots rares, techniques, régionaux, argotiques, vulgaires ou choquants, mots composés de plusieurs mots si possible.
-- Pas de doublons (comparaison insensible à la casse et aux accents).
-- Taille : environ **1 500 mots** (version 2 ; la version 1 en comptait 682), pour limiter les répétitions d'une partie à l'autre. Un test vérifie l'absence de doublons et un minimum de 1 000 mots.
+- Pas de doublons dans toute la liste (comparaison insensible à la casse et aux accents).
+- Un test vérifie ces règles, un minimum de 1 000 noms communs (de quoi jouer sans aucun nom propre) et de 1 000 mots au total.
 - Les noms de couleurs (rouge, vert, noir…) sont exclus de la liste, pour ne pas les confondre avec les couleurs des cartes.
 - Longueur : majoritairement des mots courts ou moyens ; les mots longs (> 12 lettres) sont acceptés mais rares, car ils occupent une ligne entière.
+- Ajouter ou retirer un mot, une catégorie, ou en changer l'ordre **incrémente `MOTS_VERSION`** : l'ordre des mots fait partie du format des seeds.
 
 ---
 
@@ -104,7 +130,7 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, c
                 └───┘ « Changer les mots »             │
                                                        ▼
                                           ┌────────────────────────┐
-                              ┌──────────►│ PASSAGE : donneuse X   │  « Tour de l'équipe X » + [Prêt]
+                              ┌──────────►│ PASSAGE : donneuse X   │  nom de X + [Prêt]
                               │           └───────────┬────────────┘
                               │                       ▼
                               │           ┌────────────────────────┐
@@ -112,7 +138,7 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, c
                               │           └───────────┬────────────┘
                               │                       ▼
                               │           ┌────────────────────────┐
-                              │           │ PASSAGE : devineuse Y  │  « Au tour de l'équipe Y » + [Prêt]
+                              │           │ PASSAGE : devineuse Y  │  nom de Y + [Prêt]
                               │           └───────────┬────────────┘
                               │                       ▼
                               │           ┌────────────────────────┐
@@ -129,10 +155,10 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, c
 ### 5.1 PRÉPARATION
 
 - Affiche les 25 mots sur fond neutre, **sans aucune couleur de clé**.
-- Affiche aussi, pour information, le nombre de mots à faire deviner sous chaque case « prête » (« 9 mots »), et le rappel « 9 tours en tout, pour les deux équipes · 3 mots partagés ».
-- Bouton **« Changer les mots »** (voir 3.6).
-- Affichage discret de la seed, avec possibilité d'en saisir une.
-- Deux cases à cocher : **« Équipe A prête »** et **« Équipe B prête »**.
+- Affiche aussi, en une ligne, le rappel des règles de la partie : « 9 tours en tout · 3 mots partagés · 3 noirs chacune » (« aucun mot noir » s'il n'y en a pas).
+- Bouton **« Changer les mots »** (voir 3.6) et bouton **« ⚙ Réglages »** (page de configuration, 3.7), côte à côte.
+- Affichage discret de la seed, avec possibilité d'en saisir une ; saisir une seed génère la partie avec la configuration courante.
+- Deux cases à cocher, une par équipe, portant le **nom de l'équipe** (en gras) et la mention « Équipe prête ».
 - Quand les deux sont cochées → COMPTE À REBOURS.
 
 ### 5.2 COMPTE À REBOURS
@@ -143,12 +169,14 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, c
 
 ### 5.3 PASSAGE (écran de transition)
 
-- Écran **opaque** qui ne montre **aucune information secrète** : seulement « Tour de l'équipe X » (donneuse) ou « Au tour de l'équipe Y » (devineuse), un bouton **« Prêt »** et un rappel du score (mots restants de chaque équipe, tours restants communs).
+- Écran **opaque** qui ne montre **aucune information secrète** : seulement le **nom de l'équipe concernée** en grand, précédé de « À faire deviner · passez le téléphone à » (donneuse) ou « À deviner · passez le téléphone à » (devineuse), un bouton **« Prêt »** et un rappel du score (mots restants de chaque équipe, tours restants communs).
 - Il existe pour que l'appareil puisse être passé sans que l'autre équipe voie l'écran. Il apparaît **à chaque changement de rôle**, même si c'est la même équipe qui garde le téléphone (passage de « devine » à « fait deviner »).
 - Il porte la couleur de l'équipe concernée (A en bleu, B en ambre) et ne laisse rien de la grille dans le DOM.
 - Un lien discret **« Abandonner la partie »** (avec confirmation) permet de sortir d'une partie en cours : tout le monde perd (cause « abandon »). Il n'existe que sur les écrans de passage.
 
 ### 5.4 INDICE (équipe donneuse X)
+
+Le bandeau du haut affiche le nom de l'équipe (pastille de sa couleur) suivi de « indice » ; en devinette, le nom de l'équipe qui devine suivi de « devinette ».
 
 Affichage des 25 cartes avec la clé de X :
 
@@ -237,6 +265,7 @@ L'état complet est un objet sérialisable en JSON (pour la sauvegarde, voir 8.3
 | Champ | Type | Description |
 |---|---|---|
 | `versionFormat` | nombre | Version du format de l'état (pour ignorer une sauvegarde incompatible). |
+| `config` | objet | La configuration de la partie : `{ noirs, categories: [identifiants activés], noms: { A, B } }`. |
 | `versionMots` | nombre | Version de la liste de mots utilisée. |
 | `seed` | chaîne | Seed de la partie. |
 | `mots` | 25 chaînes | La grille. |
@@ -313,9 +342,9 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 |---|---|
 | `<style>` | Mise en page et couleurs |
 | Structure HTML | Un conteneur par écran ; un seul visible à la fois |
-| `<script id="mots">` | Liste de mots + version |
+| `<script id="mots">` | Noms communs, catégories de noms propres, version |
 | `<script id="aleatoire">` | Hachage de la seed, PRNG, mélange, génération de seed |
-| `<script id="jeu">` | Logique pure : création de partie, actions, règles, conditions de fin. Aucun accès au DOM ni à `localStorage`. |
+| `<script id="jeu">` | Logique pure : configuration, création de partie, actions, règles, conditions de fin. Aucun accès au DOM ni à `localStorage`. |
 | `<script id="sauvegarde">` | Lecture / écriture de l'état dans `localStorage` |
 | `<script id="affichage">` | Rendu des écrans, ajustement de la grille, gestion des événements, démarrage |
 
@@ -330,6 +359,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 ### 8.3 Sauvegarde
 
 - L'état est enregistré dans `localStorage` après chaque action, pour reprendre la partie après un rechargement accidentel, une mise en veille ou un appel.
+- La **configuration** est aussi enregistrée à part (clé `banger.config`) pour servir aux parties suivantes, même après la fin d'une partie.
 - Au démarrage, si une sauvegarde compatible existe, la partie reprend sur un **écran de passage** (jamais directement sur une vue qui révèle une clé).
 - Si `localStorage` est indisponible (navigation privée, `file://` sur certains navigateurs…), le jeu fonctionne normalement, sans reprise. Tous les accès sont protégés par `try/catch`.
 - **(H, optionnel)** API *Screen Wake Lock* pour empêcher la mise en veille de l'écran pendant la partie, si le navigateur la propose.
@@ -345,7 +375,9 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 - Un script de test de développement, `tests/jeu.test.js`, non livré aux joueurs, lit `index.html`, extrait ces trois scripts et les exécute avec Node (`node:vm` et `node:test`, intégrés à Node, sans dépendance) : `node --test` (sans argument).
 - Cas à couvrir :
   - même seed ⇒ même partie ; seeds différentes ⇒ parties différentes ;
-  - 25 mots distincts ; dans chaque clé, exactement 9 verts et 3 noirs, sans recouvrement à l'intérieur d'une clé ;
+  - 25 mots distincts ; dans chaque clé, exactement 9 verts et `noirs` noirs (3 par défaut), sans recouvrement à l'intérieur d'une clé ;
+  - configuration : valeurs par défaut, normalisation des valeurs hors limites, noms identiques refusés, nombre de noirs respecté de 0 à 6, aucun mot d'une catégorie désactivée tiré, jeu possible sans aucun nom propre, noms d'équipe sans effet sur le tirage, configuration conservée dans l'état ;
+  - liste de mots : convention minuscule / majuscule, catégories sans doublon, `MOTS` = noms communs + noms propres ;
   - exactement 3 mots verts en commun entre les deux clés, soit 15 mots verts distincts ;
   - les autres combinaisons de couleurs entre clés (vert/noir, noir/noir…) apparaissent aussi ;
   - mot partagé : trouvé par une équipe, il compte pour les deux (restants, victoire, jamais compté deux fois) ; mot non partagé : seule la clé de la donneuse avance ;
@@ -369,6 +401,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 - Minuteur pour donner un indice ou deviner.
 - Autres langues que le français.
 - Mode paysage optimisé (il doit fonctionner, sans être optimisé).
+- Modifier la configuration en cours de partie, régler le nombre de noirs séparément pour chaque équipe, ajouter ses propres mots, catégories pour les noms communs.
 
 ---
 
@@ -378,7 +411,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 |---|---|
 | Mots dans la grille | 25 |
 | Mots verts par équipe | 9, mots partagés inclus (15 mots verts distincts en tout) |
-| Mots noirs par équipe | 3 |
+| Mots noirs par équipe | 3 par défaut, réglable de 0 à 6 (même nombre pour les deux équipes) |
 | Mots partagés (verts des deux côtés) | 3, lesquels est inconnu des joueurs ; trouvés par une équipe, ils comptent pour les deux |
 | Autres recoupements entre les clés | Libres (vert/noir, noir/noir, rouge/vert…) |
 | Tours | 9 en tout, communs aux deux équipes |
@@ -396,6 +429,7 @@ Aucune pour l'instant.
 Décisions récentes :
 
 - **Paramètres de la partie** (remplacent les tirages 7 à 10 mots, 0 à 4 mots partagés, 1 à 2 mots noirs et ⌈n/2⌉ tours par équipe) : 9 mots verts par équipe, 3 mots partagés, 9 tours en tout communs aux deux équipes.
-- **Mots noirs** : 3 par équipe (au lieu de 1 ou 2). Les noirs de B sont tirés parmi les mots qui ne sont pas verts pour B ; un mot noir pour une équipe peut donc être vert, rouge ou noir pour l'autre.
+- **Configuration de la partie** : nom des équipes, nombre de mots noirs (0 à 6, 3 par défaut) et catégories de noms propres activables (3.7). Valider la configuration génère une nouvelle grille avec la même seed.
+- **Mots noirs** : 3 par équipe par défaut (au lieu de 1 ou 2 au départ). Les noirs de B sont tirés parmi les mots qui ne sont pas verts pour B ; un mot noir pour une équipe peut donc être vert, rouge ou noir pour l'autre.
 - **Mots partagés** : verts pour les deux équipes ; trouvé par une équipe, un mot partagé compte pour les deux. Le jeu l'annonce au moment où il est trouvé.
 - L'équipe qui devine peut appuyer sur « Arrêter de deviner » **avant toute proposition** (elle passe alors son tour).

@@ -203,6 +203,33 @@ button.carte:not(:disabled) { cursor: pointer; }
 .plein .emoji { font-size: 72px; line-height: 1; }
 .plein.haut { justify-content: flex-start; overflow-y: auto; align-items: stretch; text-align: left; }
 .plein.haut h1 { text-align: center; font-size: 26px; }
+.config { justify-content: flex-start; align-items: stretch; text-align: left; overflow: hidden; gap: 10px; padding: 14px 16px; }
+.config h1 { text-align: center; font-size: 26px; }
+.config-corps { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 4px; }
+.config section { background: #fff; border: 2px solid var(--bord); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.config h2 { margin: 0; font-size: 16px; }
+.config .aide { margin: 0; font-size: 13px; color: #555; }
+.config .champ { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600; }
+.config .champ input {
+  height: 48px; padding: 0 12px; font: inherit; font-size: 18px; font-weight: 400;
+  border: 2px solid var(--texte); border-radius: 12px; background: #fff; -webkit-user-select: text; user-select: text;
+}
+.config .champ.eq-A input { border-color: var(--eq-a); }
+.config .champ.eq-B input { border-color: var(--eq-b); }
+.config .categorie {
+  min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+  border: 2px solid var(--bord); border-radius: 12px; cursor: pointer;
+}
+.config .categorie input { width: 24px; height: 24px; flex: 0 0 auto; accent-color: var(--texte); }
+.config .categorie b { display: block; font-size: 15px; }
+.config .categorie small { display: block; font-size: 12px; color: #555; font-weight: 400; }
+.config .categorie.coche { background: #e8f5ec; border-color: var(--vert); }
+.config .rang-petit { display: flex; gap: 8px; }
+.config .rang-petit .btn { min-height: 44px; flex: 1 1 0; font-size: 14px; }
+.config .total { font-size: 13px; font-weight: 600; }
+.config-actions { flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px; }
+.chip { max-width: 62vw; overflow: hidden; text-overflow: ellipsis; }
+.role { font-weight: 400; margin-left: 6px; }
 .recap-liste { display: flex; flex-direction: column; gap: 10px; }
 .recap-liste .entree { background: #fff; border: 2px solid var(--bord); border-radius: 12px; padding: 10px 12px; }
 .recap-liste .entree.eq-A { border-color: var(--eq-a); }
@@ -222,17 +249,22 @@ button.carte:not(:disabled) { cursor: pointer; }
 <div id="retour" class="plein retour" hidden></div>
 <div id="fin-ecran" class="plein" hidden></div>
 <div id="recap" class="plein haut" hidden></div>
+<div id="config" class="plein config" hidden></div>
 <noscript><p style="padding:24px">Ce jeu a besoin de JavaScript pour fonctionner.</p></noscript>
 
 <script id="mots">
-/* Liste de mots : noms communs et noms propres très connus de tous.
-   Toute modification de la liste doit incrémenter MOTS_VERSION (une seed n'est
-   reproductible qu'avec la même version). */
+/* Liste de mots : noms communs (toujours utilisés) et noms propres répartis en catégories
+   que les joueurs peuvent activer ou désactiver dans la configuration.
+   Convention : un nom commun commence par une minuscule, un nom propre par une majuscule.
+   Toute modification de la liste doit incrémenter MOTS_VERSION (une seed n'est reproductible
+   qu'avec la même version). */
 (function () {
   'use strict';
   var B = window.Banger = window.Banger || {};
-  B.MOTS_VERSION = 2;
-  B.MOTS = [
+  B.MOTS_VERSION = 3;
+
+  // Noms communs
+  B.MOTS_COMMUNS = [
     // Animaux
     'chat', 'chien', 'cheval', 'vache', 'cochon', 'mouton', 'poule', 'canard', 'lapin', 'souris',
     'lion', 'tigre', 'éléphant', 'girafe', 'singe', 'ours', 'loup', 'renard', 'serpent', 'grenouille',
@@ -295,16 +327,6 @@ button.carte:not(:disabled) { cursor: pointer; }
     'bureau', 'chambre', 'grenier', 'cave', 'balcon', 'terrasse', 'village', 'ville', 'campagne', 'palais',
     'temple', 'cabane', 'igloo', 'tente', 'moulin', 'fontaine', 'statue', 'monument', 'place', 'rue',
     'quartier',
-    // Géographie (noms propres)
-    'Paris', 'France', 'Londres', 'Rome', 'Madrid', 'Berlin', 'Amérique', 'Afrique', 'Europe', 'Asie',
-    'Italie', 'Espagne', 'Allemagne', 'Angleterre', 'Japon', 'Chine', 'Brésil', 'Mexique', 'Canada', 'Égypte',
-    'Australie', 'Marseille', 'Lyon', 'Tokyo', 'Venise', 'Bretagne', 'Alpes', 'Sahara', 'Amazonie', 'Antarctique',
-    'Suisse', 'Belgique', 'Russie', 'Inde', 'Grèce', 'Portugal', 'Atlantique', 'Méditerranée', 'Corse', 'Normandie',
-    'Versailles', 'Louvre', 'Eiffel', 'Titanic', 'Mars', 'Jupiter', 'Saturne', 'Vénus',
-    // Personnages, personnalités, fêtes (noms propres)
-    'Napoléon', 'Einstein', 'Mozart', 'Picasso', 'Cléopâtre', 'César', 'Molière', 'Zorro', 'Astérix', 'Obélix',
-    'Tintin', 'Mickey', 'Batman', 'Superman', 'Pinocchio', 'Cendrillon', 'Shrek', 'Pikachu', 'Dracula', 'Merlin',
-    'Hercule', 'Zeus', 'Tarzan', 'Aladdin', 'Disney', 'Noël', 'Halloween', 'Pâques',
     // Culture, sport, techno
     'musique', 'guitare', 'piano', 'violon', 'tambour', 'trompette', 'flûte', 'chanson', 'danse', 'film',
     'photo', 'peinture', 'tableau', 'journal', 'magazine', 'radio', 'jeu', 'dé', 'échecs', 'cartes',
@@ -390,26 +412,10 @@ button.carte:not(:disabled) { cursor: pointer; }
     'sculpteur', 'photographe', 'comédien', 'jongleur', 'acrobate', 'dompteur', 'bouffon', 'empereur', 'paysan', 'pharaon',
     'gladiateur', 'viking', 'samouraï', 'ninja', 'mousquetaire', 'druide', 'génie', 'lutin', 'troll', 'elfe',
     'cyclope', 'minotaure', 'centaure', 'sphinx', 'zombie',
-    // Géographie (suite)
-    'Pékin', 'Moscou', 'Bruxelles', 'Genève', 'Lisbonne', 'Athènes', 'Amsterdam', 'Barcelone', 'Naples', 'Milan',
-    'Florence', 'Dublin', 'Istanbul', 'Jérusalem', 'Bangkok', 'Sydney', 'Hollywood', 'Californie', 'Texas', 'Floride',
-    'Alaska', 'Hawaï', 'Cuba', 'Argentine', 'Pérou', 'Colombie', 'Maroc', 'Algérie', 'Tunisie', 'Sénégal',
-    'Madagascar', 'Kenya', 'Turquie', 'Irlande', 'Écosse', 'Pologne', 'Suède', 'Norvège', 'Danemark', 'Finlande',
-    'Islande', 'Autriche', 'Hollande', 'Luxembourg', 'Monaco', 'Tahiti', 'Corée', 'Vietnam', 'Thaïlande', 'Himalaya',
-    'Everest', 'Pyrénées', 'Alsace', 'Provence', 'Bordeaux', 'Toulouse', 'Nice', 'Lille', 'Nantes', 'Strasbourg',
-    'Cannes', 'Seine', 'Loire', 'Rhône', 'Nil', 'Amazone', 'Tamise', 'Danube', 'Pacifique', 'Arctique',
-    'Caraïbes', 'Orient', 'Montmartre', 'Colisée', 'Acropole',
-    // Personnalités et personnages (suite)
-    'Gandhi', 'Mandela', 'Churchill', 'Charlemagne', 'Pasteur', 'Newton', 'Galilée', 'Darwin', 'Monet', 'Beethoven',
-    'Shakespeare', 'Voltaire', 'Gagarine', 'Messi', 'Zidane', 'Chaplin', 'Elvis', 'Bambi', 'Dumbo', 'Simba',
-    'Mowgli', 'Nemo', 'Olaf', 'Mulan', 'Garfield', 'Snoopy', 'Panoramix', 'Idéfix', 'Babar', 'Pokémon',
-    'Mario', 'Sonic', 'Zelda', 'Minecraft', 'Tetris', 'Lego', 'Playmobil', 'Barbie', 'Hulk', 'Thor',
-    'Spiderman', 'Joker', 'Frankenstein', 'Godzilla', 'Yoda', 'Gandalf', 'Gulliver', 'Excalibur', 'Poséidon', 'Cupidon',
-    'Atlantide', 'Ulysse', 'Troie',
     // Sport et loisirs (suite)
     'handball', 'baseball', 'hockey', 'badminton', 'escrime', 'équitation', 'gymnastique', 'athlétisme', 'marathon', 'sprint',
     'saut', 'javelot', 'haltère', 'plongeon', 'randonnée', 'escalade', 'barbecue', 'bowling', 'billard', 'poker',
-    'loto', 'Scrabble', 'quiz', 'carnaval', 'défilé', 'confettis', 'guirlande', 'cloche',
+    'loto', 'quiz', 'carnaval', 'défilé', 'confettis', 'guirlande', 'cloche',
     // Arts, musique et médias (suite)
     'dessin', 'roman', 'poème', 'conte', 'fable', 'page', 'série', 'publicité', 'affiche', 'album',
     'disque', 'rock', 'jazz', 'opéra', 'ballet', 'accordéon', 'harpe', 'saxophone', 'clarinette', 'xylophone',
@@ -425,7 +431,69 @@ button.carte:not(:disabled) { cursor: pointer; }
     'trône', 'police', 'alarme', 'danger', 'bouée', 'boule', 'cube', 'cercle', 'carré', 'triangle',
     'ligne', 'point', 'croix', 'trèfle', 'chiffre', 'nombre', 'alphabet', 'code'
   ];
+
+  // Noms propres, par catégorie (ordre fixe : il fait partie du format des seeds)
+  B.CATEGORIES = [
+    {
+      id: 'pays', libelle: 'Pays et continents',
+      mots: [
+        'Amérique', 'Afrique', 'Europe', 'Asie', 'Antarctique', 'France', 'Italie', 'Espagne', 'Allemagne', 'Angleterre',
+        'Japon', 'Chine', 'Brésil', 'Mexique', 'Canada', 'Égypte', 'Australie', 'Suisse', 'Belgique', 'Russie',
+        'Inde', 'Grèce', 'Portugal', 'Cuba', 'Argentine', 'Pérou', 'Colombie', 'Maroc', 'Algérie', 'Tunisie',
+        'Sénégal', 'Madagascar', 'Kenya', 'Turquie', 'Irlande', 'Écosse', 'Pologne', 'Suède', 'Norvège', 'Danemark',
+        'Finlande', 'Islande', 'Autriche', 'Hollande', 'Luxembourg', 'Monaco', 'Corée', 'Vietnam', 'Thaïlande'
+      ]
+    },
+    {
+      id: 'villes', libelle: 'Villes',
+      mots: [
+        'Paris', 'Londres', 'Rome', 'Madrid', 'Berlin', 'Marseille', 'Lyon', 'Tokyo', 'Venise', 'Versailles',
+        'Pékin', 'Moscou', 'Bruxelles', 'Genève', 'Lisbonne', 'Athènes', 'Amsterdam', 'Barcelone', 'Naples', 'Milan',
+        'Florence', 'Dublin', 'Istanbul', 'Jérusalem', 'Bangkok', 'Sydney', 'Hollywood', 'Bordeaux', 'Toulouse', 'Nice',
+        'Lille', 'Nantes', 'Strasbourg', 'Cannes'
+      ]
+    },
+    {
+      id: 'lieux', libelle: 'Régions, fleuves, monuments et planètes',
+      mots: [
+        'Bretagne', 'Alpes', 'Sahara', 'Amazonie', 'Atlantique', 'Méditerranée', 'Corse', 'Normandie', 'Louvre', 'Eiffel',
+        'Californie', 'Texas', 'Floride', 'Alaska', 'Hawaï', 'Tahiti', 'Himalaya', 'Everest', 'Pyrénées', 'Alsace',
+        'Provence', 'Seine', 'Loire', 'Rhône', 'Nil', 'Amazone', 'Tamise', 'Danube', 'Pacifique', 'Arctique',
+        'Caraïbes', 'Orient', 'Montmartre', 'Colisée', 'Acropole', 'Atlantide', 'Troie', 'Mars', 'Jupiter', 'Saturne',
+        'Vénus'
+      ]
+    },
+    {
+      id: 'personnalites', libelle: 'Personnalités',
+      mots: [
+        'Napoléon', 'Einstein', 'Mozart', 'Picasso', 'Cléopâtre', 'César', 'Molière', 'Gandhi', 'Mandela', 'Churchill',
+        'Charlemagne', 'Pasteur', 'Newton', 'Galilée', 'Darwin', 'Monet', 'Beethoven', 'Shakespeare', 'Voltaire', 'Gagarine',
+        'Messi', 'Zidane', 'Chaplin', 'Elvis'
+      ]
+    },
+    {
+      id: 'personnages', libelle: 'Personnages et légendes',
+      mots: [
+        'Zorro', 'Astérix', 'Obélix', 'Tintin', 'Mickey', 'Batman', 'Superman', 'Pinocchio', 'Cendrillon', 'Shrek',
+        'Pikachu', 'Dracula', 'Merlin', 'Hercule', 'Zeus', 'Tarzan', 'Aladdin', 'Bambi', 'Dumbo', 'Simba',
+        'Mowgli', 'Nemo', 'Olaf', 'Mulan', 'Garfield', 'Snoopy', 'Panoramix', 'Idéfix', 'Babar', 'Mario',
+        'Sonic', 'Zelda', 'Hulk', 'Thor', 'Spiderman', 'Joker', 'Frankenstein', 'Godzilla', 'Yoda', 'Gandalf',
+        'Gulliver', 'Excalibur', 'Poséidon', 'Cupidon', 'Ulysse'
+      ]
+    },
+    {
+      id: 'marques', libelle: 'Marques, films, jeux et fêtes',
+      mots: [
+        'Disney', 'Titanic', 'Pokémon', 'Minecraft', 'Tetris', 'Lego', 'Playmobil', 'Barbie', 'Scrabble', 'Noël',
+        'Halloween', 'Pâques'
+      ]
+    }
+  ];
+
+  // Toute la liste (noms communs puis noms propres)
+  B.MOTS = B.MOTS_COMMUNS.concat.apply(B.MOTS_COMMUNS, B.CATEGORIES.map(function (c) { return c.mots; }));
 })();
+
 </script>
 
 <script id="aleatoire">
@@ -508,10 +576,12 @@ button.carte:not(:disabled) { cursor: pointer; }
   var B = window.Banger = window.Banger || {};
   var R = B.Aleatoire;
 
-  var FORMAT = 4;
+  var FORMAT = 5;
   var NB_MOTS = 25;
   var NB_VERTS = 9;      // mots à faire deviner par équipe
-  var NB_NOIRS = 3;      // mots mortels par équipe
+  var NOIRS_DEFAUT = 3;  // mots mortels par équipe (configurable)
+  var NOIRS_MAX = 6;
+  var NOM_MAX = 16;      // longueur maximale d'un nom d'équipe
   var NB_PARTAGES = 3;   // mots verts pour les deux équipes
   var NB_TOURS = 9;      // tours (indices) en tout, communs aux deux équipes
   var ECRANS = ['preparation', 'compteARebours', 'passageDonneuse', 'indice', 'passageDevineuse', 'devinette', 'fin'];
@@ -536,6 +606,56 @@ button.carte:not(:disabled) { cursor: pointer; }
     if (!condition) throw new Error(message || 'Action impossible dans cet état');
   }
 
+  // --- Configuration ---------------------------------------------------------
+
+  // Réglages choisis par les joueurs : nombre de mots noirs par équipe, noms propres
+  // utilisés (catégories de B.CATEGORIES) et noms des équipes.
+  function configParDefaut() {
+    return {
+      noirs: NOIRS_DEFAUT,
+      categories: B.CATEGORIES.map(function (c) { return c.id; }),
+      noms: { A: 'Équipe A', B: 'Équipe B' }
+    };
+  }
+
+  function nettoyerNom(nom, defaut) {
+    var n = String(nom === undefined || nom === null ? '' : nom).replace(/\s+/g, ' ').trim();
+    if (n.length > NOM_MAX) n = n.slice(0, NOM_MAX).trim();
+    return n || defaut;
+  }
+
+  // Complète et corrige une configuration (valeurs absentes ou hors limites).
+  function normaliserConfig(c) {
+    var d = configParDefaut();
+    c = c || {};
+    var noirs = Number.isInteger(c.noirs) ? c.noirs : d.noirs;
+    var ids = d.categories;
+    var actives = Array.isArray(c.categories) ? c.categories : ids;
+    var noms = c.noms || {};
+    return {
+      noirs: Math.max(0, Math.min(NOIRS_MAX, noirs)),
+      categories: ids.filter(function (id) { return actives.indexOf(id) >= 0; }), // ordre fixe de B.CATEGORIES
+      noms: { A: nettoyerNom(noms.A, d.noms.A), B: nettoyerNom(noms.B, d.noms.B) }
+    };
+  }
+
+  // Message d'erreur si la configuration n'est pas jouable, sinon null.
+  function erreurConfig(c) {
+    var n = normaliserConfig(c);
+    if (normaliser(n.noms.A) === normaliser(n.noms.B)) return 'Les deux équipes doivent avoir des noms différents.';
+    return null;
+  }
+
+  // Mots tirables avec cette configuration : noms communs + noms propres des catégories activées.
+  function motsDisponibles(config) {
+    var actives = normaliserConfig(config).categories;
+    var mots = B.MOTS_COMMUNS.slice();
+    B.CATEGORIES.forEach(function (cat) {
+      if (actives.indexOf(cat.id) >= 0) mots = mots.concat(cat.mots);
+    });
+    return mots;
+  }
+
   // --- Création d'une partie -------------------------------------------------
 
   // Clé d'une équipe : pour chaque mot, 'vert', 'rouge' ou 'noir'.
@@ -556,15 +676,16 @@ button.carte:not(:disabled) { cursor: pointer; }
   // Ordre des tirages (fait partie du format, voir docs/specification.md 3.2) :
   // mots, mélange pour la clé de A, mélange des verts de A (choix des partagés),
   // mélange des autres mots (verts de B), mélange pour les noirs de B, pile ou face.
-  function creerPartie(seed) {
+  function creerPartie(seed, configuration) {
+    var config = normaliserConfig(configuration);
     var graine = R.normaliserSeed(seed);
     var rng = R.creerPRNG(graine);
-    var mots = R.melanger(B.MOTS, rng).slice(0, NB_MOTS);
+    var mots = R.melanger(motsDisponibles(config), rng).slice(0, NB_MOTS);
 
-    // Clé de A : NB_VERTS verts puis NB_NOIRS noirs, parmi 25 mots mélangés.
+    // Clé de A : NB_VERTS verts puis config.noirs noirs, parmi 25 mots mélangés.
     var ordreA = R.melanger(tousLesIndices(), rng);
     var vertsA = ordreA.slice(0, NB_VERTS);
-    var noirsA = ordreA.slice(NB_VERTS, NB_VERTS + NB_NOIRS);
+    var noirsA = ordreA.slice(NB_VERTS, NB_VERTS + config.noirs);
 
     // Verts de B : exactement NB_PARTAGES verts de A (les mots partagés), le reste hors des verts de A.
     var partages = R.melanger(vertsA, rng).slice(0, NB_PARTAGES);
@@ -572,7 +693,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     var vertsB = partages.concat(horsVertsA.slice(0, NB_VERTS - NB_PARTAGES));
 
     // Noirs de B : parmi les mots qui ne sont pas verts pour B (ils peuvent être verts pour A).
-    var noirsB = R.melanger(tousLesIndices().filter(function (i) { return vertsB.indexOf(i) < 0; }), rng).slice(0, NB_NOIRS);
+    var noirsB = R.melanger(tousLesIndices().filter(function (i) { return vertsB.indexOf(i) < 0; }), rng).slice(0, config.noirs);
 
     var cleA = construireCle(vertsA, noirsA);
     var cleB = construireCle(vertsB, noirsB);
@@ -581,6 +702,7 @@ button.carte:not(:disabled) { cursor: pointer; }
       versionFormat: FORMAT,
       versionMots: B.MOTS_VERSION,
       seed: graine,
+      config: config,
       mots: mots,
       cle: { A: cleA, B: cleB },
       tours: NB_TOURS,
@@ -783,6 +905,8 @@ button.carte:not(:disabled) { cursor: pointer; }
       if (!e || e.versionFormat !== FORMAT || e.versionMots !== B.MOTS_VERSION) return false;
       if (ECRANS.indexOf(e.ecran) < 0) return false;
       if (!Array.isArray(e.mots) || e.mots.length !== NB_MOTS) return false;
+      if (!e.config || !e.config.noms || typeof e.config.noms.A !== 'string' || typeof e.config.noms.B !== 'string') return false;
+      if (!Number.isInteger(e.config.noirs) || !Array.isArray(e.config.categories)) return false;
       if (!e.cle || e.cle.A.length !== NB_MOTS || e.cle.B.length !== NB_MOTS) return false;
       if (typeof e.tours !== 'number' || !e.trouves || !e.erreurs || !e.pret || !Array.isArray(e.historique)) return false;
       if ((e.ecran === 'passageDevineuse' || e.ecran === 'devinette') && !e.indice) return false;
@@ -807,6 +931,12 @@ button.carte:not(:disabled) { cursor: pointer; }
   B.Jeu = {
     FORMAT: FORMAT,
     NB_MOTS: NB_MOTS,
+    NOIRS_MAX: NOIRS_MAX,
+    NOM_MAX: NOM_MAX,
+    configParDefaut: configParDefaut,
+    normaliserConfig: normaliserConfig,
+    erreurConfig: erreurConfig,
+    motsDisponibles: motsDisponibles,
     autre: autre,
     normaliser: normaliser,
     creerPartie: creerPartie,
@@ -838,6 +968,7 @@ button.carte:not(:disabled) { cursor: pointer; }
   'use strict';
   var B = window.Banger = window.Banger || {};
   var CLE = 'banger.etat';
+  var CLE_CONFIG = 'banger.config';
 
   B.Sauvegarde = {
     charger: function () {
@@ -859,6 +990,18 @@ button.carte:not(:disabled) { cursor: pointer; }
     },
     effacer: function () {
       try { window.localStorage.removeItem(CLE); } catch (x) { /* rien */ }
+    },
+    // La configuration est conservée à part : elle sert pour toutes les parties suivantes.
+    chargerConfig: function () {
+      try {
+        var texte = window.localStorage.getItem(CLE_CONFIG);
+        return texte ? B.Jeu.normaliserConfig(JSON.parse(texte)) : null;
+      } catch (x) {
+        return null;
+      }
+    },
+    sauverConfig: function (config) {
+      try { window.localStorage.setItem(CLE_CONFIG, JSON.stringify(config)); } catch (x) { /* stockage indisponible */ }
     }
   };
 })();
@@ -902,7 +1045,9 @@ button.carte:not(:disabled) { cursor: pointer; }
 
   function vider(n) { while (n.firstChild) n.removeChild(n.firstChild); }
   function pluriel(n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); }
-  function chip(eq, texte) { return el('span', { class: 'chip eq-' + eq, texte: texte || ('Équipe ' + eq) }); }
+  function nom(eq) { return etat.config.noms[eq]; }
+  function chip(eq) { return el('span', { class: 'chip eq-' + eq, texte: nom(eq) }); }
+  function motsNoirs(n) { return n === 0 ? 'aucun mot noir' : n + ' noir' + (n > 1 ? 's' : '') + ' chacune'; }
   function encadrer(mot) { return '« ' + mot + ' »'; }
 
   // --- Changements d'état ----------------------------------------------------
@@ -1025,7 +1170,7 @@ button.carte:not(:disabled) { cursor: pointer; }
   }
 
   function cacherSurcouches() {
-    ['passage', 'decompte', 'retour', 'fin-ecran', 'recap'].forEach(function (id) { $(id).hidden = true; });
+    ['passage', 'decompte', 'retour', 'fin-ecran', 'recap', 'config'].forEach(function (id) { $(id).hidden = true; });
   }
 
   // --- Écran : préparation ---------------------------------------------------
@@ -1038,7 +1183,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     seed.value = etat.seed;
     function appliquer() {
       var s = R.normaliserSeed(seed.value);
-      if (/^[A-Z0-9]{1,16}$/.test(s) && s !== etat.seed) dispatch(function () { return J.creerPartie(s); });
+      if (/^[A-Z0-9]{1,16}$/.test(s) && s !== etat.seed) dispatch(function () { return J.creerPartie(s, etat.config); });
       else seed.value = etat.seed;
     }
     seed.addEventListener('change', appliquer);
@@ -1059,20 +1204,133 @@ button.carte:not(:disabled) { cursor: pointer; }
       return el('label', { class: 'pret eq-' + eq + (etat.pret[eq] ? ' coche' : '') }, [
         cb,
         el('span', {}, [
-          el('b', { texte: 'Équipe ' + eq + ' prête' }),
-          el('small', { texte: pluriel(J.nbVerts(etat, eq), 'mot') })
+          el('b', { texte: nom(eq) }),
+          el('small', { texte: 'Équipe prête' })
         ])
       ]);
     }
 
     actions([
-      el('div', { class: 'regle', texte: pluriel(etat.tours, 'tour') + ' en tout, pour les deux équipes · 3 mots partagés' }),
-      el('button', {
-        type: 'button', class: 'btn', texte: 'Changer les mots',
-        onclick: function () { dispatch(function () { return J.creerPartie(R.nouvelleSeed()); }); }
-      }),
+      el('div', { class: 'regle', texte: pluriel(etat.tours, 'tour') + ' en tout · 3 mots partagés · ' + motsNoirs(etat.config.noirs) }),
+      el('div', { class: 'rang' }, [
+        el('button', {
+          type: 'button', class: 'btn', texte: 'Changer les mots',
+          onclick: function () { dispatch(function () { return J.creerPartie(R.nouvelleSeed(), etat.config); }); }
+        }),
+        el('button', { type: 'button', class: 'btn', texte: '⚙ Réglages', onclick: montrerConfig })
+      ]),
       el('div', { class: 'rang' }, [pret('A'), pret('B')])
     ]);
+  }
+
+  // --- Page de configuration -------------------------------------------------
+
+  function montrerConfig() {
+    var o = $('config');
+    var brouillon = JSON.parse(JSON.stringify(etat.config));
+    vider(o);
+
+    o.appendChild(el('h1', { texte: 'Configuration' }));
+    var corps = el('div', { class: 'config-corps' });
+
+    // Noms des équipes
+    function champNom(eq, couleur) {
+      var saisie = el('input', {
+        type: 'text', value: brouillon.noms[eq], maxlength: J.NOM_MAX, autocomplete: 'off', autocorrect: 'off',
+        spellcheck: 'false', 'aria-label': 'Nom de l’équipe ' + eq
+      });
+      saisie.value = brouillon.noms[eq];
+      saisie.addEventListener('input', function () { brouillon.noms[eq] = saisie.value; maj(); });
+      return el('label', { class: 'champ eq-' + eq }, ['Équipe ' + eq + ' (' + couleur + ')', saisie]);
+    }
+    corps.appendChild(el('section', {}, [
+      el('h2', { texte: 'Noms des équipes' }),
+      champNom('A', 'bleu'), champNom('B', 'ambre'),
+      el('p', { class: 'aide', texte: J.NOM_MAX + ' caractères au plus, deux noms différents.' })
+    ]));
+
+    // Mots noirs
+    var moins = el('button', { type: 'button', class: 'btn', texte: '−', 'aria-label': 'Un mot noir de moins' });
+    var plus = el('button', { type: 'button', class: 'btn', texte: '+', 'aria-label': 'Un mot noir de plus' });
+    var valeurNoirs = el('output', { 'aria-live': 'polite' });
+    moins.addEventListener('click', function () { if (brouillon.noirs > 0) { brouillon.noirs -= 1; maj(); } });
+    plus.addEventListener('click', function () { if (brouillon.noirs < J.NOIRS_MAX) { brouillon.noirs += 1; maj(); } });
+    corps.appendChild(el('section', {}, [
+      el('h2', { texte: 'Mots noirs par équipe' }),
+      el('div', { class: 'stepper' }, [moins, valeurNoirs]),
+      el('p', { class: 'aide', texte: 'Si l’autre équipe choisit un mot noir, tout le monde perd. De 0 à ' + J.NOIRS_MAX + ' par équipe (3 par défaut).' })
+    ]));
+    corps.lastChild.querySelector('.stepper').appendChild(plus);
+
+    // Noms propres
+    var lignes = {};
+    var total = el('div', { class: 'total', 'aria-live': 'polite' });
+    var liste = el('div', { class: 'rang-petit' }, []);
+    function basculerToutes(valeur) {
+      brouillon.categories = valeur ? B.CATEGORIES.map(function (c) { return c.id; }) : [];
+      B.CATEGORIES.forEach(function (c) { lignes[c.id].cb.checked = valeur; });
+      maj();
+    }
+    liste.appendChild(el('button', { type: 'button', class: 'btn', texte: 'Tout cocher', onclick: function () { basculerToutes(true); } }));
+    liste.appendChild(el('button', { type: 'button', class: 'btn', texte: 'Tout décocher', onclick: function () { basculerToutes(false); } }));
+    var sectionPropres = el('section', {}, [
+      el('h2', { texte: 'Noms propres' }),
+      el('p', { class: 'aide', texte: 'Décochez une catégorie pour ne plus tirer ses mots. Les noms communs restent toujours.' })
+    ]);
+    B.CATEGORIES.forEach(function (cat) {
+      var cb = el('input', { type: 'checkbox', checked: brouillon.categories.indexOf(cat.id) >= 0, 'data-categorie': cat.id });
+      cb.addEventListener('change', function () {
+        var i = brouillon.categories.indexOf(cat.id);
+        if (cb.checked && i < 0) brouillon.categories.push(cat.id);
+        if (!cb.checked && i >= 0) brouillon.categories.splice(i, 1);
+        maj();
+      });
+      var etiquette = el('label', { class: 'categorie' }, [
+        cb,
+        el('span', {}, [
+          el('b', { texte: cat.libelle }),
+          el('small', { texte: pluriel(cat.mots.length, 'mot') + ' · ' + cat.mots.slice(0, 3).join(', ') + '…' })
+        ])
+      ]);
+      lignes[cat.id] = { cb: cb, etiquette: etiquette };
+      sectionPropres.appendChild(etiquette);
+    });
+    sectionPropres.appendChild(liste);
+    sectionPropres.appendChild(total);
+    corps.appendChild(sectionPropres);
+    o.appendChild(corps);
+
+    // Boutons
+    var msg = el('div', { class: 'msg', 'aria-live': 'polite' });
+    var valider = el('button', { type: 'button', class: 'btn primaire', texte: 'Valider' });
+    var annuler = el('button', { type: 'button', class: 'btn', texte: 'Annuler', onclick: function () { o.hidden = true; } });
+    valider.addEventListener('click', function () {
+      if (J.erreurConfig(brouillon)) return;
+      var config = J.normaliserConfig(brouillon);
+      S.sauverConfig(config);
+      o.hidden = true;
+      dispatch(function () { return J.creerPartie(etat.seed, config); });
+    });
+    o.appendChild(el('div', { class: 'config-actions' }, [
+      msg,
+      el('p', { class: 'aide', texte: 'Valider génère une nouvelle grille à partir de la même seed.' }),
+      el('div', { class: 'rang' }, [annuler, valider])
+    ]));
+
+    function maj() {
+      valeurNoirs.textContent = String(brouillon.noirs);
+      moins.disabled = brouillon.noirs <= 0;
+      plus.disabled = brouillon.noirs >= J.NOIRS_MAX;
+      B.CATEGORIES.forEach(function (c) {
+        lignes[c.id].etiquette.classList.toggle('coche', brouillon.categories.indexOf(c.id) >= 0);
+      });
+      total.textContent = pluriel(J.motsDisponibles(brouillon).length, 'mot') + ' disponibles dans la liste.';
+      var erreur = J.erreurConfig(brouillon);
+      msg.textContent = erreur || '';
+      valider.disabled = !!erreur;
+    }
+    maj();
+    o.hidden = false;
   }
 
   // --- Compte à rebours ------------------------------------------------------
@@ -1116,15 +1374,15 @@ button.carte:not(:disabled) { cursor: pointer; }
     vider(p);
     p.className = 'plein passage eq-' + eq;
 
-    p.appendChild(el('p', { class: 'petit', texte: 'Passez le téléphone à l’équipe ' + eq }));
-    p.appendChild(el('h1', { texte: donneuse ? 'Tour de l’équipe ' + eq : 'Au tour de l’équipe ' + eq }));
+    p.appendChild(el('p', { class: 'petit', texte: donneuse ? 'À faire deviner · passez le téléphone à' : 'À deviner · passez le téléphone à' }));
+    p.appendChild(el('h1', { texte: nom(eq) }));
     p.appendChild(el('p', {
       texte: donneuse
         ? 'Vous allez faire deviner vos mots. L’autre équipe ne doit pas regarder l’écran.'
         : 'Vous allez deviner. L’autre équipe ne doit rien dire ni montrer.'
     }));
     var lignes = ['A', 'B'].map(function (e) {
-      return el('div', { texte: 'Équipe ' + e + ' : ' + pluriel(J.restants(etat, e), 'mot') + ' à trouver' });
+      return el('div', { texte: nom(e) + ' : ' + pluriel(J.restants(etat, e), 'mot') + ' à trouver' });
     });
     lignes.push(el('div', { texte: 'Tours restants : ' + etat.tours }));
     p.appendChild(el('div', { class: 'recap' }, lignes));
@@ -1154,7 +1412,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     if (ui.nombre > max) ui.nombre = max;
 
     bandeau(
-      el('div', {}, [chip(X, 'Équipe ' + X + ' fait deviner')]),
+      el('div', {}, [chip(X), el('span', { class: 'role', texte: 'indice' })]),
       el('div', { class: 'droite', texte: 'Tours restants : ' + etat.tours + ' · À trouver : ' + max })
     );
 
@@ -1219,7 +1477,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     var ind = etat.indice;
 
     bandeau(
-      el('div', {}, [chip(Y, 'Équipe ' + Y + ' devine')]),
+      el('div', {}, [chip(Y), el('span', { class: 'role', texte: 'devinette' })]),
       el('div', { class: 'droite', texte: 'À trouver : ' + J.restants(etat, X) })
     );
 
@@ -1283,7 +1541,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     o.appendChild(el('h1', { texte: titre }));
     o.appendChild(el('div', { class: 'mot-retour', texte: encadrer(r.mot) }));
     o.appendChild(el('p', { texte: 'Ce mot' + texte }));
-    if (r.partage) o.appendChild(el('p', { class: 'partage', texte: '⇄ Mot partagé ! Il comptait aussi pour l’équipe ' + r.equipe + '.' }));
+    if (r.partage) o.appendChild(el('p', { class: 'partage', texte: '⇄ Mot partagé ! Il comptait aussi pour ' + nom(r.equipe) + '.' }));
     o.appendChild(el('p', { texte: fin }));
     o.hidden = false;
 
@@ -1310,7 +1568,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     var r = etat.resultat;
     if (r.type === 'victoire') return { emoji: '🎉', titre: 'Victoire !', texte: 'Youpi, tout le monde a gagné !' };
     if (r.cause === 'noir') {
-      return { emoji: '☠', titre: 'Défaite', texte: 'Mot mortel : ' + encadrer(r.mot) + ', choisi par l’équipe ' + r.equipe + '.' };
+      return { emoji: '☠', titre: 'Défaite', texte: 'Mot mortel : ' + encadrer(r.mot) + ', choisi par ' + nom(r.equipe) + '.' };
     }
     if (r.cause === 'tours') {
       var n = J.restants(etat, 'A') + J.restants(etat, 'B');
@@ -1321,7 +1579,7 @@ button.carte:not(:disabled) { cursor: pointer; }
 
   function nouvellePartie() {
     ui.detailFin = false;
-    dispatch(function () { return J.creerPartie(R.nouvelleSeed()); });
+    dispatch(function () { return J.creerPartie(R.nouvelleSeed(), etat.config); });
   }
 
   function montrerFin() {
@@ -1355,7 +1613,7 @@ button.carte:not(:disabled) { cursor: pointer; }
         : 'aucune proposition';
       if (h.arretVolontaire) props += ' (arrêt volontaire)';
       liste.appendChild(el('div', { class: 'entree eq-' + h.equipe }, [
-        el('div', {}, ['Équipe ' + h.equipe + ' : ', el('span', { class: 'indice-mot', texte: encadrer(h.mot) + ' — ' + h.nombre })]),
+        el('div', {}, [nom(h.equipe) + ' : ', el('span', { class: 'indice-mot', texte: encadrer(h.mot) + ' — ' + h.nombre })]),
         el('div', { class: 'props', texte: props })
       ]));
     });
@@ -1372,7 +1630,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     var eq = ui.ongletFin, autreEq = J.autre(eq);
     bandeau(
       el('div', { class: 'titre', texte: m.emoji + ' ' + m.titre }),
-      el('div', { class: 'droite', texte: 'Clé de l’équipe ' + eq })
+      el('div', { class: 'droite', texte: 'Clé : ' + nom(eq) })
     );
 
     var fatal = (etat.resultat.type === 'defaite' && etat.resultat.cause === 'noir') ? etat.resultat.indice : -1;
@@ -1388,7 +1646,7 @@ button.carte:not(:disabled) { cursor: pointer; }
 
     function onglet(e) {
       return el('button', {
-        type: 'button', class: 'btn', texte: 'Clé de ' + e, 'aria-pressed': eq === e ? 'true' : 'false',
+        type: 'button', class: 'btn', texte: 'Clé : ' + nom(e), 'aria-pressed': eq === e ? 'true' : 'false',
         onclick: function () { ui.ongletFin = e; rendre(); }
       });
     }
@@ -1451,7 +1709,7 @@ button.carte:not(:disabled) { cursor: pointer; }
 
   function demarrer() {
     var sauvegarde = S.charger();
-    etat = sauvegarde ? J.reprendre(sauvegarde) : J.creerPartie(R.nouvelleSeed());
+    etat = sauvegarde ? J.reprendre(sauvegarde) : J.creerPartie(R.nouvelleSeed(), S.chargerConfig() || J.configParDefaut());
     if (etat.ecran === 'fin') ui.detailFin = true;
     majTaille();
     window.addEventListener('resize', surRedimensionnement);

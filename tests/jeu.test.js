@@ -91,6 +91,24 @@ test('liste de mots : sans doublons, mots simples, taille suffisante', () => {
   assert.equal(typeof B.MOTS_VERSION, 'number');
 });
 
+test('liste de mots : noms communs en minuscule, noms propres en majuscule et rangés dans des catégories', () => {
+  assert.ok(B.CATEGORIES.length >= 4);
+  const ids = new Set();
+  let propres = 0;
+  for (const cat of B.CATEGORIES) {
+    assert.ok(!ids.has(cat.id), 'catégorie en double : ' + cat.id);
+    ids.add(cat.id);
+    assert.ok(cat.libelle && cat.mots.length > 0, 'catégorie vide : ' + cat.id);
+    for (const mot of cat.mots) {
+      assert.ok(mot[0] !== mot[0].toLowerCase(), 'nom propre sans majuscule : ' + mot);
+      propres++;
+    }
+  }
+  for (const mot of B.MOTS_COMMUNS) assert.ok(mot[0] === mot[0].toLowerCase(), 'nom commun avec majuscule : ' + mot);
+  assert.equal(B.MOTS.length, B.MOTS_COMMUNS.length + propres);
+  assert.ok(B.MOTS_COMMUNS.length >= 1000, 'il faut assez de noms communs pour jouer sans noms propres');
+});
+
 // --- Générateur aléatoire ----------------------------------------------------
 
 test('aléatoire : même seed, mêmes tirages ; seeds différentes, tirages différents', () => {
@@ -207,6 +225,119 @@ test('partie : une seed donne toujours la même partie (régression du format)',
   const e = J.creerPartie('ABC123');
   assert.equal(e.versionMots, B.MOTS_VERSION);
   assert.equal(JSON.stringify(J.creerPartie('ABC123')), JSON.stringify(e));
+});
+
+// --- Configuration -----------------------------------------------------------
+
+function mots(e) { return e.mots; }
+const TOUS_LES_PROPRES = new Set(B.CATEGORIES.flatMap((c) => c.mots));
+
+test('config : valeurs par défaut (3 noirs, toutes les catégories, Équipe A et Équipe B)', () => {
+  const c = J.configParDefaut();
+  assert.equal(c.noirs, 3);
+  deepEqual(c.categories, B.CATEGORIES.map((x) => x.id));
+  deepEqual(c.noms, { A: 'Équipe A', B: 'Équipe B' });
+  deepEqual(J.normaliserConfig(undefined), c);
+  deepEqual(J.normaliserConfig({}), c);
+  deepEqual(J.creerPartie('CF0').config, c);
+});
+
+test('config : normalisation des valeurs hors limites ou invalides', () => {
+  assert.equal(J.normaliserConfig({ noirs: 99 }).noirs, J.NOIRS_MAX);
+  assert.equal(J.normaliserConfig({ noirs: -4 }).noirs, 0);
+  assert.equal(J.normaliserConfig({ noirs: 0 }).noirs, 0);
+  assert.equal(J.normaliserConfig({ noirs: 'beaucoup' }).noirs, 3);
+  deepEqual(J.normaliserConfig({ categories: ['pays', 'nexiste-pas'] }).categories, ['pays']);
+  deepEqual(J.normaliserConfig({ categories: [] }).categories, []);
+  const n = J.normaliserConfig({ noms: { A: '   Les   Lions  ', B: '' } }).noms;
+  assert.equal(n.A, 'Les Lions');
+  assert.equal(n.B, 'Équipe B');
+  assert.equal(J.normaliserConfig({ noms: { A: 'x'.repeat(50) } }).noms.A.length, J.NOM_MAX);
+});
+
+test('config : deux équipes ne peuvent pas avoir le même nom (casse et accents ignorés)', () => {
+  assert.equal(J.erreurConfig(J.configParDefaut()), null);
+  assert.ok(J.erreurConfig({ noms: { A: 'Lions', B: 'lions' } }));
+  assert.ok(J.erreurConfig({ noms: { A: 'Éclair', B: 'eclair' } }));
+  assert.ok(J.erreurConfig({ noms: { A: 'Équipe B', B: '' } }), 'un nom vide devient « Équipe B »');
+  assert.equal(J.erreurConfig({ noms: { A: 'Lions', B: 'Tigres' } }), null);
+});
+
+test('config : le nombre de mots noirs est respecté, de 0 à 6, pour les deux équipes', () => {
+  for (let noirs = 0; noirs <= J.NOIRS_MAX; noirs++) {
+    for (const seed of seeds(40)) {
+      const e = J.creerPartie(seed, { noirs });
+      for (const eq of ['A', 'B']) {
+        assert.equal(compter(e.cle[eq], 'noir'), noirs, 'noirs ' + noirs + ' seed ' + seed);
+        assert.equal(compter(e.cle[eq], 'vert'), 9);
+      }
+      assert.equal(e.config.noirs, noirs);
+    }
+  }
+});
+
+test('config : catégories désactivées => aucun de leurs mots n’est tiré', () => {
+  for (const cat of B.CATEGORIES) {
+    const actives = B.CATEGORIES.filter((c) => c.id !== cat.id).map((c) => c.id);
+    for (const seed of seeds(100)) {
+      const e = J.creerPartie(seed, { categories: actives });
+      for (const m of mots(e)) assert.ok(!cat.mots.includes(m), cat.id + ' désactivée mais « ' + m + ' » tiré');
+    }
+  }
+});
+
+test('config : sans aucun nom propre, tous les mots sont des noms communs (25 mots distincts)', () => {
+  for (const seed of seeds(200)) {
+    const e = J.creerPartie(seed, { categories: [] });
+    assert.equal(new Set(e.mots).size, 25);
+    for (const m of e.mots) assert.ok(!TOUS_LES_PROPRES.has(m), m);
+  }
+});
+
+test('config : une seule catégorie activée => ses mots apparaissent, jamais ceux des autres', () => {
+  const cat = B.CATEGORIES[0];
+  let vus = 0;
+  for (const seed of seeds(300)) {
+    const e = J.creerPartie(seed, { categories: [cat.id] });
+    for (const m of e.mots) {
+      if (TOUS_LES_PROPRES.has(m)) { assert.ok(cat.mots.includes(m), m + ' hors catégorie'); vus++; }
+    }
+  }
+  assert.ok(vus > 0, 'aucun mot de la catégorie tiré en 300 parties');
+});
+
+test('config : toutes les catégories activées => des noms propres apparaissent', () => {
+  let propres = 0;
+  for (const seed of seeds(100)) for (const m of J.creerPartie(seed).mots) if (TOUS_LES_PROPRES.has(m)) propres++;
+  assert.ok(propres > 0);
+});
+
+test('config : motsDisponibles et déterminisme (même seed + même config => même partie)', () => {
+  const toutes = J.motsDisponibles(J.configParDefaut());
+  assert.equal(toutes.length, B.MOTS.length);
+  assert.equal(J.motsDisponibles({ categories: [] }).length, B.MOTS_COMMUNS.length);
+  const c = { noirs: 2, categories: ['pays', 'villes'], noms: { A: 'Lions', B: 'Tigres' } };
+  deepEqual(J.creerPartie('CF9', c), J.creerPartie('CF9', c));
+  notDeepEqual(J.creerPartie('CF9', c).cle, J.creerPartie('CF9', { noirs: 4 }).cle);
+});
+
+test('config : les noms des équipes sont conservés dans l’état et n’influencent pas le tirage', () => {
+  const a = J.creerPartie('CF5', { noms: { A: 'Lions', B: 'Tigres' } });
+  const b = J.creerPartie('CF5');
+  deepEqual(a.config.noms, { A: 'Lions', B: 'Tigres' });
+  deepEqual(a.mots, b.mots);
+  deepEqual(a.cle, b.cle);
+  assert.equal(a.premiere, b.premiere);
+  // ils survivent à la sérialisation et à la reprise
+  assert.equal(J.reprendre(JSON.parse(JSON.stringify(a))).config.noms.A, 'Lions');
+});
+
+test('config : la configuration est copiée dans l’état (modifier l’original ne change pas la partie)', () => {
+  const c = J.configParDefaut();
+  const e = J.creerPartie('CF6', c);
+  c.noirs = 1; c.noms.A = 'Autre';
+  assert.equal(e.config.noirs, 3);
+  assert.equal(e.config.noms.A, 'Équipe A');
 });
 
 // --- Préparation -------------------------------------------------------------
@@ -628,6 +759,8 @@ test('reprise : les états incompatibles ou corrompus sont refusés', () => {
   assert.equal(J.etatValide({}), false);
   assert.equal(J.etatValide(Object.assign({}, e, { versionFormat: 999 })), false);
   assert.equal(J.etatValide(Object.assign({}, e, { versionFormat: 1 })), false, 'les parties du format 1 (sans mots partagés) sont ignorées');
+  assert.equal(J.etatValide(Object.assign({}, e, { config: undefined })), false, 'une partie sans configuration est ignorée');
+  assert.equal(J.etatValide(Object.assign({}, e, { config: { noirs: 3, categories: [] } })), false);
   assert.equal(J.etatValide(Object.assign({}, e, { versionMots: 999 })), false);
   assert.equal(J.etatValide(Object.assign({}, e, { mots: ['a'] })), false);
   assert.equal(J.etatValide(Object.assign({}, e, { ecran: 'nimportequoi' })), false);

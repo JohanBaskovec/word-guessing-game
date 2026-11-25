@@ -29,6 +29,8 @@ Lire la spécification avant toute modification. En cas de doute ou de contradic
 ## Organisation du code
 
 - `index.html` est découpé en blocs `<script id="…">` : `mots`, `aleatoire`, `jeu`, `sauvegarde`, `affichage`.
+- La liste de mots du bloc `mots` est séparée en `MOTS_COMMUNS` (noms communs, toujours utilisés) et `CATEGORIES` (noms propres par catégorie, activables dans la page de configuration) ; `MOTS` est l'union des deux.
+- La **configuration** de partie (nom des équipes, nombre de mots noirs, catégories activées) vit dans l'état (`etat.config`) et à part dans `localStorage` (`banger.config`). Les noms d'équipe s'affichent toujours via la configuration, jamais en dur (« Équipe A » n'est que le nom par défaut) ; les textes doivent rester corrects pour n'importe quel nom (pas d'accord en genre ni en nombre).
 - `mots`, `aleatoire` et `jeu` ne touchent **ni au DOM ni à `localStorage`** : fonctions pures (état + action → nouvel état), testables avec Node.
 - L'état est un objet sérialisable en JSON (spécification, section 6). Il est sauvegardé dans `localStorage` après chaque action ; tous les accès à `localStorage` sont protégés par `try/catch`.
 - Une reprise de partie commence toujours sur un **écran de passage**, jamais sur un écran qui révèle une clé.
@@ -38,8 +40,8 @@ Lire la spécification avant toute modification. En cas de doute ou de contradic
 
 - Tout est en **français** : interface, documentation, messages de commit, commentaires et identifiants (`equipe`, `donneuse`, `tours`, `trouves`…), en reprenant le vocabulaire de la spécification (section 2).
 - Textes de l'interface avec une typographie française correcte (accents, espaces avant `:` `!` `?`, guillemets « »).
-- Liste de mots : noms communs ou propres **très connus de tous**, sans doublons (insensible à la casse et aux accents), rien de vulgaire ou de choquant. Toute modification de la liste **incrémente sa version**, car une seed n'est reproductible qu'avec la même version.
-- Ne pas changer l'ordre des tirages aléatoires sans le documenter : cela change toutes les parties associées aux seeds existantes.
+- Liste de mots : noms communs ou propres **très connus de tous**, sans doublons (insensible à la casse et aux accents), rien de vulgaire ou de choquant. Un nom commun commence par une **minuscule**, un nom propre par une **majuscule** et doit être rangé dans une catégorie (un test le vérifie). Toute modification de la liste (mot, catégorie, ordre) **incrémente `MOTS_VERSION`**, car une seed n'est reproductible qu'avec la même version.
+- Ne pas changer l'ordre des tirages aléatoires sans le documenter : cela change toutes les parties associées aux seeds existantes. Toute modification de la structure de l'état ou des règles de génération **incrémente `FORMAT`** (les sauvegardes d'un autre format sont ignorées).
 
 ## Quand les règles changent
 
