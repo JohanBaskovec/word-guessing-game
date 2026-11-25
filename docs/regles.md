@@ -18,33 +18,23 @@ Le jeu tire au hasard, à partir d'une **seed** (graine) :
 
 - **25 mots** connus de tous (noms communs ou noms propres) ;
 - pour **chaque équipe**, une **clé secrète** :
-  - **7 à 10 mots verts** : les mots que cette équipe doit faire deviner à l'autre ;
+  - **9 mots verts** : les mots que cette équipe doit faire deviner à l'autre ;
   - **1 ou 2 mots noirs (mortels)** : si l'autre équipe les choisit, la partie est perdue ;
   - tous les autres mots sont **rouges** : ils ne sont pas à faire deviner.
-
-Les deux équipes n'ont pas forcément le même nombre de mots verts (par exemple 10 pour A et 8 pour B).
 
 **Les deux clés se recoupent.** Un mot peut être vert pour une équipe et noir pour l'autre, noir pour les deux, rouge pour l'une et vert pour l'autre… Ce n'est pas parce qu'un mot est rouge ou vert pour votre équipe qu'il l'est aussi pour l'autre !
 
 ### Les mots partagés
 
-Entre **0 et 4 mots** sont verts **pour les deux équipes** : ce sont des **mots partagés**. Personne ne sait combien il y en a, ni lesquels.
+**3 mots** sont verts **pour les deux équipes** : ce sont les **mots partagés**. Personne ne sait lesquels.
 
-Quand une équipe trouve un mot partagé, il compte **pour les deux équipes** : l'autre équipe n'aura plus à le faire deviner. Il disparaît de la grille pour tout le monde, et le nombre de mots restants à faire deviner de l'équipe qui devine baisse aussi. Les mots partagés sont donc un petit bonus… à condition de tomber dessus.
+Quand une équipe trouve un mot partagé, il compte **pour les deux équipes** : l'autre équipe n'aura plus à le faire deviner. Il disparaît de la grille pour tout le monde, et le nombre de mots restants à faire deviner de l'équipe qui devine baisse aussi.
 
-Le nombre de mots verts de chaque équipe (7 à 10) **inclut** ses mots partagés.
+Les 9 mots verts de chaque équipe **incluent** ses mots partagés : il y a donc **15 mots** à trouver en tout (9 + 9 − 3).
 
 ### Nombre de tours
 
-Chaque équipe dispose d'un nombre limité de **tours**, c'est-à-dire d'indices qu'elle peut donner :
-**tours = nombre de mots verts ÷ 2, arrondi au supérieur**.
-
-| Mots verts | Tours |
-|---|---|
-| 7 | 4 |
-| 8 | 4 |
-| 9 | 5 |
-| 10 | 5 |
+Les deux équipes se partagent **9 tours** : chaque fois qu'une équipe donne un indice, un tour est consommé, quelle que soit l'équipe. Il faut donc trouver les 15 mots en 9 indices au plus.
 
 ## Étape 1 : préparation
 
@@ -53,7 +43,7 @@ Chaque équipe dispose d'un nombre limité de **tours**, c'est-à-dire d'indices
 3. Chaque équipe coche sa case **« Équipe A prête »** / **« Équipe B prête »**.
 4. Quand les deux cases sont cochées, un compte à rebours de **3 secondes** démarre.
 5. Le message **« Tour de l'équipe X »** apparaît : l'équipe X prend le téléphone et appuie sur **« Prêt »**.
-   L'équipe qui commence est celle qui a **le plus de mots à faire deviner** ; en cas d'égalité, elle est tirée au sort.
+   L'équipe qui commence est tirée au sort.
 
 ## Étape 2 : la partie
 
@@ -65,7 +55,7 @@ Les équipes alternent entre deux rôles : **faire deviner** et **deviner**.
    Les mots verts déjà trouvés par l'autre équipe sont signalés.
 2. Elle choisit **un mot indice** et l'écrit. L'indice doit être un seul mot, différent des 25 mots de la grille.
 3. Elle choisit **combien de mots** cet indice doit faire trouver (entre 0 et le nombre de mots verts qu'il lui reste).
-4. Elle appuie sur **« Valider »**. Cela consomme **un tour** de l'équipe X.
+4. Elle appuie sur **« Valider »**. Cela consomme **un des 9 tours** communs.
 5. Un écran **« Au tour de l'équipe Y »** apparaît : on passe le téléphone à l'équipe Y, qui appuie sur **« Prêt »**.
 
 ### Deviner (équipe Y)
@@ -88,12 +78,14 @@ Quand l'équipe Y a fini de deviner :
 - si l'équipe Y a encore des mots à faire deviner, c'est à elle de faire deviner ;
 - sinon, c'est de nouveau à l'équipe X.
 
+Le dernier tour est toujours joué en entier : l'indice, puis les propositions de l'équipe qui devine.
+
 ## Fin de la partie
 
 - **Victoire** 🎉 : tous les mots verts des **deux** équipes ont été trouvés. Tout le monde a gagné, youpi !
 - **Défaite** :
   - un mot **mortel** a été choisi ;
-  - ou une équipe n'a **plus de tours** alors qu'il lui reste des mots à faire deviner : la partie s'arrête aussitôt.
+  - ou il n'y a **plus de tours** (le neuvième indice est donné et joué) alors qu'il reste des mots à trouver.
   - ou les joueurs **abandonnent** (lien « Abandonner la partie » sur les écrans où l'on se passe le téléphone).
 
 À la fin, les clés des deux équipes sont révélées (avec le nombre de mots partagés) et on peut lancer une nouvelle partie.

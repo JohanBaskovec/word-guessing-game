@@ -133,7 +133,7 @@ test('partie : même seed => même partie, seeds différentes => parties différ
   notDeepEqual(J.creerPartie('ABC123').mots, J.creerPartie('ABC124').mots);
 });
 
-test('partie : 25 mots distincts, verts 7-10, noirs 1-2, tours = ⌈verts / 2⌉', () => {
+test('partie : 25 mots distincts, 9 verts et 1 à 2 noirs par équipe, 9 tours communs', () => {
   for (const seed of seeds(300)) {
     const e = J.creerPartie(seed);
     assert.equal(e.mots.length, 25);
@@ -141,32 +141,27 @@ test('partie : 25 mots distincts, verts 7-10, noirs 1-2, tours = ⌈verts / 2⌉
     for (const eq of ['A', 'B']) {
       assert.equal(e.cle[eq].length, 25);
       const v = compter(e.cle[eq], 'vert'), n = compter(e.cle[eq], 'noir');
-      assert.ok(v >= 7 && v <= 10, 'verts : ' + v);
+      assert.equal(v, 9);
       assert.ok(n >= 1 && n <= 2, 'noirs : ' + n);
       assert.equal(compter(e.cle[eq], 'rouge'), 25 - v - n);
-      assert.equal(e.tours[eq], Math.ceil(v / 2));
     }
+    assert.equal(e.tours, 9);
     assert.equal(e.ecran, 'preparation');
   }
 });
 
-test('partie : tous les nombres de verts (7 à 10) et de noirs (1 à 2) apparaissent', () => {
-  const verts = new Set(), noirs = new Set();
+test('partie : 1 et 2 mots noirs apparaissent, indépendamment pour chaque équipe', () => {
+  const vus = { A: new Set(), B: new Set() };
   for (const seed of seeds(300)) {
     const e = J.creerPartie(seed);
-    for (const eq of ['A', 'B']) { verts.add(compter(e.cle[eq], 'vert')); noirs.add(compter(e.cle[eq], 'noir')); }
+    for (const eq of ['A', 'B']) vus[eq].add(compter(e.cle[eq], 'noir'));
   }
-  deepEqual([...verts].sort((x, y) => x - y), [7, 8, 9, 10]);
-  deepEqual([...noirs].sort((x, y) => x - y), [1, 2]);
+  deepEqual([...vus.A].sort(), [1, 2]);
+  deepEqual([...vus.B].sort(), [1, 2]);
 });
 
-test('partie : tours 7→4, 8→4, 9→5, 10→5', () => {
-  const vus = {};
-  for (const seed of seeds(300)) {
-    const e = J.creerPartie(seed);
-    for (const eq of ['A', 'B']) vus[compter(e.cle[eq], 'vert')] = e.tours[eq];
-  }
-  deepEqual(vus, { 7: 4, 8: 4, 9: 5, 10: 5 });
+test('partie : le nombre de tours est de 9, partagés entre les deux équipes', () => {
+  for (const seed of seeds(20)) assert.equal(J.creerPartie(seed).tours, 9);
 });
 
 test('partie : toutes les combinaisons de couleurs entre les deux clés existent (vert/vert = mots partagés)', () => {
@@ -180,17 +175,13 @@ test('partie : toutes les combinaisons de couleurs entre les deux clés existent
   }
 });
 
-test('partie : entre 0 et 4 mots partagés (verts pour les deux équipes), tous les nombres apparaissent', () => {
-  const vus = new Set();
+test('partie : exactement 3 mots partagés (verts pour les deux équipes)', () => {
   for (const seed of seeds(400)) {
     const e = J.creerPartie(seed);
     const communs = e.cle.A.filter((c, i) => c === 'vert' && e.cle.B[i] === 'vert').length;
-    assert.equal(communs, e.nbPartages, 'seed ' + seed);
-    assert.ok(e.nbPartages >= 0 && e.nbPartages <= 4);
-    for (const eq of ['A', 'B']) assert.ok(compter(e.cle[eq], 'vert') >= e.nbPartages);
-    vus.add(e.nbPartages);
+    assert.equal(communs, 3, 'seed ' + seed);
+    assert.equal(J.nbVerts(e, 'A') + J.nbVerts(e, 'B') - communs, 15, '15 mots verts distincts à trouver');
   }
-  deepEqual([...vus].sort((x, y) => x - y), [0, 1, 2, 3, 4]);
 });
 
 test('partie : estPartage correspond aux mots verts des deux clés', () => {
@@ -200,16 +191,14 @@ test('partie : estPartage correspond aux mots verts des deux clés', () => {
   }
 });
 
-test('partie : l’équipe avec le plus de verts commence, pile ou face si égalité', () => {
+test('partie : les deux équipes ont 9 verts, la première équipe est tirée au sort', () => {
   const commencent = new Set();
-  for (const seed of seeds(400)) {
+  for (const seed of seeds(200)) {
     const e = J.creerPartie(seed);
-    const a = compter(e.cle.A, 'vert'), b = compter(e.cle.B, 'vert');
-    if (a > b) assert.equal(e.premiere, 'A');
-    else if (b > a) assert.equal(e.premiere, 'B');
-    else commencent.add(e.premiere);
+    assert.equal(J.nbVerts(e, 'A'), J.nbVerts(e, 'B'));
+    commencent.add(e.premiere);
   }
-  assert.equal(commencent.size, 2, 'en cas d’égalité, A et B doivent chacune pouvoir commencer');
+  assert.equal(commencent.size, 2, 'A et B doivent chacune pouvoir commencer');
 });
 
 test('partie : une seed donne toujours la même partie (régression du format)', () => {
@@ -287,16 +276,21 @@ test('indice : le nombre est borné par les mots restants de la donneuse', () =>
   assert.doesNotThrow(() => J.validerIndice(e, 'rivage', 0));
 });
 
-test('indice : valider consomme un tour et passe à l’équipe qui devine', () => {
+test('indice : valider consomme un tour commun et passe à l’équipe qui devine', () => {
   const e = demarrer('I4');
   const X = e.donneuse;
-  const tours = e.tours[X];
   const s = J.validerIndice(e, 'rivage', 2);
-  assert.equal(s.tours[X], tours - 1);
+  assert.equal(s.tours, e.tours - 1);
   assert.equal(s.ecran, 'passageDevineuse');
   deepEqual(s.indice, { mot: 'rivage', nombre: 2, trouvesCetteManche: 0 });
   assert.equal(s.historique.length, 1);
   assert.equal(s.historique[0].equipe, X);
+});
+
+test('indice : impossible de donner un indice quand il n’y a plus de tour', () => {
+  const e = demarrer('I5');
+  e.tours = 0;
+  assert.throws(() => J.validerIndice(e, 'rivage', 1));
 });
 
 // --- Devinette ---------------------------------------------------------------
@@ -441,7 +435,6 @@ test('enchaînement : la manche s’arrête quand la donneuse n’a plus de mots
   const X = e.donneuse;
   const v = indicesDe(e, X, 'vert');
   e.trouves[X] = v.slice(0, v.length - 1);
-  e.tours[J.autre(X)] = 5;
   e = donnerIndice(e, 1);
   e = J.validerSelection(J.selectionner(e, v[v.length - 1]));
   assert.notEqual(e.ecran, 'devinette');
@@ -460,9 +453,14 @@ test('victoire : tous les mots verts des deux équipes trouvés', () => {
   assert.equal(e.retour.suite, 'victoire');
 });
 
+// Une partie quelconque a toujours 3 mots partagés.
+function partieAvecPartage(seed) {
+  const e0 = J.creerPartie(seed || 'SH1');
+  return J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+}
+
 test('mot partagé : trouvé par une équipe, il compte aussi pour l’autre', () => {
-  const e0 = chercher((p) => p.nbPartages >= 1);
-  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  let e = partieAvecPartage();
   const X = e.donneuse, Y = J.autre(X);
   const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] === 'vert');
   const restantsY = J.restants(e, Y);
@@ -489,21 +487,18 @@ test('mot non partagé : seule la clé de la donneuse avance', () => {
 });
 
 test('mot partagé : l’autre équipe n’a plus à le deviner quand elle fait deviner à son tour', () => {
-  const e0 = chercher((p) => p.nbPartages >= 1);
-  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  let e = partieAvecPartage();
   const X = e.donneuse, Y = J.autre(X);
   const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] === 'vert');
   e = J.validerSelection(J.selectionner(donnerIndice(e, 0), i)); // « 0 » : un seul mot, la manche s'arrête
   assert.equal(e.donneuse, Y);
   e = J.confirmerPassage(e);
-  const attendu = J.nbVerts(e, Y) - 1;
-  assert.equal(J.restants(e, Y), attendu);
+  assert.equal(J.restants(e, Y), J.nbVerts(e, Y) - 1);
   assert.ok(e.cle[Y][i] === 'vert' && e.trouves[Y].includes(i));
 });
 
 test('mot partagé : un mot partagé n’est jamais compté deux fois (pas de restants négatifs)', () => {
-  const e0 = chercher((p) => p.nbPartages >= 1);
-  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  let e = partieAvecPartage();
   const X = e.donneuse, Y = J.autre(X);
   const i = e.cle[X].findIndex((c, k) => c === 'vert' && e.cle[Y][k] === 'vert');
   e.trouves[Y] = [i]; // déjà trouvé côté Y par un autre moyen
@@ -512,14 +507,12 @@ test('mot partagé : un mot partagé n’est jamais compté deux fois (pas de re
 });
 
 test('mot partagé : victoire quand tous les mots sont trouvés, y compris grâce aux mots partagés', () => {
-  const e0 = chercher((p) => p.nbPartages >= 1);
-  let e = J.confirmerPassage(J.finCompteARebours(J.basculerPret(J.basculerPret(e0, 'A', true), 'B', true)));
+  let e = partieAvecPartage();
   const X = e.donneuse, Y = J.autre(X);
   const vX = indicesDe(e, X, 'vert');
   const vY = indicesDe(e, Y, 'vert');
-  const partages = vX.filter((i) => e.cle[Y][i] === 'vert');
-  // Tout est trouvé sauf les mots non partagés de Y... qu'on marque déjà trouvés, et un seul mot partagé de X.
-  const dernier = partages[0];
+  const dernier = vX.find((i) => e.cle[Y][i] === 'vert');
+  // Tout est trouvé sauf un mot partagé : le trouver termine la partie pour les deux équipes.
   e.trouves[X] = vX.filter((i) => i !== dernier);
   e.trouves[Y] = vY.filter((i) => i !== dernier);
   e = J.validerSelection(J.selectionner(donnerIndice(e, 1), dernier));
@@ -527,36 +520,53 @@ test('mot partagé : victoire quand tous les mots sont trouvés, y compris grâc
   assert.equal(e.resultat.type, 'victoire');
 });
 
-test('défaite immédiate : une équipe n’a plus de tours alors qu’il lui reste des mots', () => {
+test('défaite : plus aucun tour alors qu’il reste des mots à trouver', () => {
   let e = demarrer('T1');
-  const X = e.donneuse;
-  e.tours[X] = 1;
+  e.tours = 1;
   e = J.arreter(donnerIndice(e, 1));
-  assert.equal(e.tours[X], 0);
+  assert.equal(e.tours, 0);
   assert.equal(e.ecran, 'fin');
-  deepEqual(e.resultat, { type: 'defaite', cause: 'tours', equipe: X });
+  deepEqual(e.resultat, { type: 'defaite', cause: 'tours' });
 });
 
-test('défaite immédiate : même si c’est l’autre équipe qui n’a plus de tours', () => {
+test('défaite : le dernier tour est encore joué en entier avant la défaite', () => {
   let e = demarrer('T2');
-  const X = e.donneuse, Y = J.autre(X);
-  e.tours[Y] = 0;
-  e = J.arreter(donnerIndice(e, 1));
+  const X = e.donneuse;
+  const v = indicesDe(e, X, 'vert');
+  e.tours = 1;
+  e = donnerIndice(e, 2);
+  assert.equal(e.tours, 0);
+  assert.equal(e.ecran, 'devinette');
+  e = J.validerSelection(J.selectionner(e, v[0]));
+  assert.equal(e.ecran, 'devinette', 'l’équipe peut continuer à deviner pendant ce dernier tour');
+  e = J.arreter(e);
   assert.equal(e.ecran, 'fin');
-  assert.equal(e.resultat.equipe, Y);
+  assert.equal(e.resultat.cause, 'tours');
 });
 
-test('pas de défaite par tours si l’équipe a tout fait trouver avec son dernier tour', () => {
+test('les tours sont partagés : les indices des deux équipes consomment le même compteur', () => {
+  let e = demarrer('T4');
+  const X = e.donneuse, Y = J.autre(X);
+  e = J.arreter(donnerIndice(e, 1));
+  assert.equal(e.tours, 8);
+  assert.equal(e.donneuse, Y);
+  e = J.confirmerPassage(e);
+  e = J.arreter(donnerIndice(e, 1));
+  assert.equal(e.tours, 7);
+  assert.equal(e.donneuse, X);
+});
+
+test('pas de défaite si les derniers mots sont trouvés avec le dernier tour', () => {
   let e = demarrer('T3');
   const X = e.donneuse, Y = J.autre(X);
   const vX = indicesDe(e, X, 'vert');
-  e.tours[X] = 1;
+  e.tours = 1;
   e.trouves[X] = vX.slice(0, vX.length - 1);
-  e.trouves[Y] = indicesDe(e, Y, 'vert').slice(0, 1);
+  e.trouves[Y] = indicesDe(e, Y, 'vert');
   e = donnerIndice(e, 1);
   e = J.validerSelection(J.selectionner(e, vX[vX.length - 1]));
-  assert.equal(e.ecran, 'passageDonneuse');
-  assert.equal(e.donneuse, Y);
+  assert.equal(e.ecran, 'fin');
+  assert.equal(e.resultat.type, 'victoire');
 });
 
 test('une partie complète se termine toujours (par victoire ou défaite)', () => {
