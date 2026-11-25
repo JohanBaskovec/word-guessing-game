@@ -76,18 +76,17 @@ button { font: inherit; color: inherit; }
 .chip.eq-B { background: var(--eq-b); }
 
 /* Grille de cartes */
-#zone-grille { flex: 1 1 0; min-height: 0; }
-html.clavier #zone-grille { overflow-y: auto; }
+#zone-grille { flex: 1 1 0; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+#zone-grille::-webkit-scrollbar { display: none; }
 #grille {
   height: 100%;
   display: flex;
   flex-wrap: wrap;
   align-content: stretch;
   gap: 6px;
-  overflow: hidden;
   font-size: 18px;
 }
-html.clavier #grille { overflow: visible; height: auto; min-height: 100%; }
+html.clavier #grille { height: auto; min-height: 100%; }
 .carte {
   flex: 1 1 auto;
   min-width: 0;
@@ -1020,7 +1019,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     nombre: 0, texteIndice: '',
     timer: null,
     layout: null,
-    hMax: 0, largeurRef: 0, clavier: false
+    hRepos: 0, largeurRef: 0, clavier: false
   };
 
   function $(id) { return document.getElementById(id); }
@@ -1117,21 +1116,30 @@ button.carte:not(:disabled) { cursor: pointer; }
     return tailles;
   }
 
+  function deborde(g) { return g.scrollHeight > g.clientHeight; }
+
   // Cherche la plus grande police pour laquelle les 25 cartes tiennent sans défilement.
+  // Un contrôle vérifie ensuite que cela tient toujours (la police ou la hauteur visible peuvent
+  // changer après coup) et recalcule sinon.
   function ajusterGrille() {
     var g = $('grille'), zone = $('zone-grille');
     if (!g.children.length) return;
+    if (ui.clavier) {
+      // Clavier ouvert : la zone est trop petite pour un calcul fiable, on garde la dernière mise en page.
+      if (ui.layout) appliquerLayout(ui.layout.taille, ui.layout.minCarte, ui.layout.tailles);
+      return;
+    }
     var cle = etat.seed + '|' + zone.clientWidth + '|' + zone.clientHeight;
     if (ui.layout && ui.layout.cle === cle) {
       appliquerLayout(ui.layout.taille, ui.layout.minCarte, ui.layout.tailles);
-      return;
+      if (!deborde(g)) return;
+      ui.layout = null; // la mise en page mémorisée ne tient plus : on la recalcule
     }
-    if (ui.clavier) return;
 
     function tient(taille, minCarte) {
       appliquerLayout(taille, minCarte, null);
       reduireMotsLongs(taille);
-      return g.scrollHeight <= g.clientHeight + 1;
+      return !deborde(g);
     }
 
     var choix = null;
@@ -1151,6 +1159,13 @@ button.carte:not(:disabled) { cursor: pointer; }
     appliquerLayout(choix.taille, choix.minCarte, null);
     var tailles = reduireMotsLongs(choix.taille);
     appliquerLayout(choix.taille, choix.minCarte, tailles);
+    // Sécurité : si cela déborde encore, on réduit la police jusqu'à ce que tout tienne.
+    while (deborde(g) && choix.taille > 9) {
+      choix.taille -= 1;
+      appliquerLayout(choix.taille, choix.minCarte, null);
+      tailles = reduireMotsLongs(choix.taille);
+      appliquerLayout(choix.taille, choix.minCarte, tailles);
+    }
     ui.layout = { cle: cle, taille: choix.taille, minCarte: choix.minCarte, tailles: tailles };
   }
 
@@ -1675,27 +1690,48 @@ button.carte:not(:disabled) { cursor: pointer; }
       case 'fin': rendreFin(); break;
     }
     ajusterGrille();
+    planifierAjustement();
   }
 
   // --- Taille de l'écran, clavier, veille ------------------------------------
 
+  // Le clavier est considéré ouvert quand un champ de texte a le focus ET que la hauteur disponible
+  // a nettement baissé. Un champ qui garde le focus après la fermeture du clavier, un zoom ou une
+  // barre d'adresse qui bouge ne bloquent donc jamais la mise en page.
+  function champActif() {
+    var a = document.activeElement;
+    return !!a && ((a.tagName === 'INPUT' && a.type === 'text') || a.tagName === 'TEXTAREA');
+  }
+
   function majTaille() {
-    var vv = window.visualViewport;
-    var h = vv ? vv.height : window.innerHeight;
-    if (window.innerWidth !== ui.largeurRef) { ui.largeurRef = window.innerWidth; ui.hMax = 0; }
-    ui.hMax = Math.max(ui.hMax, window.innerHeight);
-    ui.clavier = h < ui.hMax * 0.75;
+    var h = window.innerHeight;
+    if (window.innerWidth !== ui.largeurRef) { ui.largeurRef = window.innerWidth; ui.hRepos = 0; }
+    var champ = champActif();
+    if (!champ) ui.hRepos = h;
+    ui.clavier = champ && ui.hRepos > 0 && h < ui.hRepos * 0.8;
     var racine = document.documentElement;
     racine.style.setProperty('--vh', Math.round(h) + 'px');
     racine.classList.toggle('clavier', ui.clavier);
   }
 
-  var delai = null;
+  // Recalcule la grille au prochain affichage (regroupe les appels rapprochés).
+  var rafAjustement = 0;
+  function planifierAjustement() {
+    if (rafAjustement) return;
+    rafAjustement = window.requestAnimationFrame(function () {
+      rafAjustement = 0;
+      if (etat && !ui.clavier) ajusterGrille();
+    });
+  }
+
   function surRedimensionnement() {
     majTaille();
-    if (ui.clavier) { window.scrollTo(0, 0); return; }
-    clearTimeout(delai);
-    delai = setTimeout(function () { if (etat) ajusterGrille(); }, 60);
+    if (!ui.clavier) planifierAjustement();
+  }
+
+  function invaliderEtAjuster() {
+    ui.layout = null;
+    planifierAjustement();
   }
 
   var verrou = null;
@@ -1715,6 +1751,18 @@ button.carte:not(:disabled) { cursor: pointer; }
     window.addEventListener('resize', surRedimensionnement);
     window.addEventListener('orientationchange', surRedimensionnement);
     if (window.visualViewport) window.visualViewport.addEventListener('resize', surRedimensionnement);
+    document.addEventListener('focusin', surRedimensionnement);
+    document.addEventListener('focusout', function () { setTimeout(surRedimensionnement, 80); });
+    // La zone de la grille change de taille (barre d'adresse, rotation…) : on recalcule.
+    if (window.ResizeObserver) new window.ResizeObserver(planifierAjustement).observe($('zone-grille'));
+    // La police système peut changer après le premier affichage.
+    window.addEventListener('load', invaliderEtAjuster);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(invaliderEtAjuster);
+    // Filet de sécurité : si, pour une raison imprévue, la grille déborde, on la recalcule.
+    setInterval(function () {
+      var g = $('grille');
+      if (etat && !ui.clavier && document.visibilityState === 'visible' && g.children.length && deborde(g)) invaliderEtAjuster();
+    }, 1500);
     document.addEventListener('visibilitychange', demanderVeille);
     document.addEventListener('click', function premier() {
       document.removeEventListener('click', premier);

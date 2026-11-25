@@ -293,7 +293,7 @@ La **logique du jeu** (fonctions pures : état + action → nouvel état) est s�
 - Structure verticale : bandeau d'état fin en haut → grille (prend tout l'espace restant) → zone d'action en bas (indice, nombre, boutons).
 - Cibles tactiles : chaque carte et chaque bouton mesure **au moins 44 × 44 px**.
 - Désactiver le zoom au double-tap et la sélection de texte sur les cartes ; pas d'effet de survol nécessaire.
-- Quand le clavier s'ouvre pour saisir l'indice, la zone de saisie et le bouton « Valider » restent visibles (la grille peut être temporairement réduite ou masquée).
+- **Clavier** : il est considéré ouvert quand un champ de texte a le focus **et** que la hauteur disponible a baissé d'au moins 20 %. Dans ce cas la grille garde sa dernière mise en page et la zone devient défilante ; dès que la hauteur revient (fermeture du clavier, même si le champ garde le focus), la mise en page est recalculée. Un zoom, une barre d'adresse qui apparaît ou disparaît ou un champ actif sans clavier ne bloquent donc jamais la mise en page.
 
 ### 7.2 Grille de cartes adaptative
 
@@ -302,7 +302,9 @@ Objectif : un mot long peut occuper une ligne à lui seul, deux mots courts (ou 
 - Les cartes sont disposées en **flux qui passe à la ligne** (`flex-wrap`), dans l'ordre de la grille.
 - Chaque carte a une largeur de base égale à la largeur de son mot (+ marges intérieures) et **s'étire** pour remplir la ligne (`flex-grow`), de sorte que chaque ligne est pleine.
 - Un mot n'est **jamais coupé** au milieu.
-- **Ajustement de la taille du texte** : au chargement et à chaque redimensionnement ou rotation, on cherche la plus grande taille de police (recherche dichotomique entre un minimum, ~14 px, et un maximum, ~28 px) pour laquelle la grille tient dans la hauteur disponible. Tous les mots utilisent la même taille.
+- **Ajustement de la taille du texte** : au chargement et à chaque redimensionnement ou rotation, on cherche la plus grande taille de police (recherche dichotomique entre un minimum, ~14 px, et un maximum, ~28 px) pour laquelle la grille tient dans la hauteur disponible, **sans marge de tolérance** (un contenu qui dépasse d'un pixel est rejeté). Tous les mots utilisent la même taille.
+- **Auto-correction** : la mise en page est recalculée quand la zone de la grille change de taille (observateur de taille : barre d'adresse du navigateur, rotation…), quand la police système finit de se charger, et par un **contrôle toutes les 1,5 s** qui détecte un débordement (cartes plus hautes que la zone) quelle qu'en soit la cause. Après chaque calcul, la police est réduite jusqu'à ce que tout tienne.
+- **Filet de sécurité** : si malgré tout le contenu dépasse la zone, celle-ci devient **défilante** (sans barre visible) : une ligne de cartes n'est jamais coupée sans pouvoir y accéder.
 - Si un mot dépasse la largeur de l'écran même à la taille minimale, seule sa carte réduit sa police.
 - L'emplacement d'une carte trouvée est conservé (carte vide) pour que la grille ne se réorganise pas pendant la partie.
 - **(H)** La disposition est la même sur tous les écrans (préparation, indice, devinette), pour que les joueurs retrouvent les mots au même endroit.
