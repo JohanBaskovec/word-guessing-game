@@ -25,6 +25,7 @@ Le jeu tire au hasard, à partir d'une **seed** (graine) :
 Les deux équipes n'ont pas forcément le même nombre de mots verts (par exemple 10 pour A et 8 pour B).
 
 **Les deux clés sont indépendantes.** Un même mot peut être vert pour A **et** vert pour B, vert pour l'une et noir pour l'autre, noir pour les deux… Ce n'est pas parce qu'un mot est vert pour votre équipe qu'il ne peut pas être celui que l'autre équipe essaie de vous faire deviner !
+Un mot vert des deux côtés doit être trouvé **deux fois** : une fois par chaque équipe, chacune sur un indice de l'autre.
 
 ### Nombre de tours
 
@@ -71,7 +72,7 @@ Les équipes alternent entre deux rôles : **faire deviner** et **deviner**.
    - **Mot vert (correct)** : bravo ! La carte disparaît et l'équipe peut continuer, jusqu'à la limite ci-dessus.
    - **Mot rouge (incorrect)** : la carte devient grise et l'équipe Y arrête de deviner pour ce tour.
    - **Mot noir (mortel)** : **la partie est perdue pour tout le monde**.
-5. À tout moment, l'équipe Y peut appuyer sur **« Arrêter de deviner »** pour finir son tour sans prendre de risque.
+5. À tout moment, même avant sa première proposition, l'équipe Y peut appuyer sur **« Arrêter de deviner »** pour finir son tour sans prendre de risque.
 
 ### Qui fait deviner ensuite ?
 

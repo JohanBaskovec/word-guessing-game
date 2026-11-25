@@ -198,7 +198,9 @@ Interaction :
 | **Rouge de X** | Retour visuel négatif. La carte devient grise pour Y. Fin de manche. |
 | **Noir de X** | **DÉFAITE** immédiate. |
 
-3. Un bouton **« Arrêter de deviner »**, disponible à tout moment de la manche, permet à Y de la terminer volontairement.
+3. Un bouton **« Arrêter de deviner »**, disponible à tout moment de la manche, y compris avant la première proposition, permet à Y de la terminer volontairement.
+
+Un mot vert dans les deux clés est suivi **séparément** de chaque côté : le trouver pour X ne le compte pas comme trouvé pour Y.
 
 Seule la clé de **X** compte pendant la manche : la couleur du mot dans la clé de Y n'a aucun effet.
 
@@ -379,7 +381,9 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 
 ## 11. Questions ouvertes
 
-| # | Question | Hypothèse actuelle |
-|---|---|---|
-| 1 | Un mot vert pour A **et** pour B, trouvé par B (sur un indice de A) : compte-t-il aussi comme trouvé pour B, ou A doit-elle encore le deviner plus tard sur un indice de B ? | Les clés sont suivies séparément : A doit encore le trouver. Le mot reste affiché normalement dans la vue « deviner » de A. |
-| 2 | L'équipe qui devine peut-elle appuyer sur « Arrêter de deviner » avant toute proposition (passer son tour) ? | Oui. |
+Aucune pour l'instant.
+
+Décisions récentes :
+
+- Un mot vert pour A **et** pour B est suivi **séparément** de chaque côté : s'il est trouvé par B sur un indice de A, A doit encore le trouver sur un indice de B, et il reste affiché normalement dans la vue « deviner » de A.
+- L'équipe qui devine peut appuyer sur « Arrêter de deviner » **avant toute proposition** (elle passe alors son tour).
