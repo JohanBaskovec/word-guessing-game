@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
+<title>Le Jeu Masterclass, Un Banger</title>
+<style>
+:root {
+  --fond: #f4f1ea;
+  --texte: #1b1b1b;
+  --bord: #c9c4b8;
+  --vert: #1c7c3f;
+  --rouge: #c62828;
+  --noir: #111;
+  --gris: #d3d3d3;
+  --gris-texte: #4a4a4a;
+  --eq-a: #1d4ed8;
+  --eq-b: #b45309;
+  --focus: #1d4ed8;
+  --h-bandeau: 40px;
+  --h-actions: 136px;
+  --min-carte: 44px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body {
+  background: var(--fond);
+  color: var(--texte);
+  font: 16px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+
+#app {
+  height: 100vh;
+  height: var(--vh, 100dvh);
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Bandeau du haut */
+#bandeau {
+  flex: 0 0 var(--h-bandeau);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+#bandeau .titre { min-width: 0; }
+#bandeau .droite { text-align: right; white-space: nowrap; }
+.seed { display: flex; align-items: center; gap: 4px; font-weight: 400; font-size: 12px; white-space: nowrap; }
+.seed input {
+  width: 84px; height: 32px; padding: 0 6px; font: inherit; font-size: 16px; letter-spacing: .06em;
+  text-transform: uppercase; text-align: center;
+  border: 1px solid var(--bord); border-radius: 8px; background: #fff;
+  -webkit-user-select: text; user-select: text;
+}
+.chip {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
+  color: #fff; font-weight: 700; white-space: nowrap;
+}
+.chip.eq-A { background: var(--eq-a); }
+.chip.eq-B { background: var(--eq-b); }
+
+/* Grille de cartes */
+#zone-grille { flex: 1 1 0; min-height: 0; }
+html.clavier #zone-grille { overflow-y: auto; }
+#grille {
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: stretch;
+  gap: 6px;
+  overflow: hidden;
+  font-size: 18px;
+}
+html.clavier #grille { overflow: visible; height: auto; min-height: 100%; }
+.carte {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--min-carte);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 .6em;
+  border: 2px solid var(--bord);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--texte);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: default;
+}
+button.carte:not(:disabled) { cursor: pointer; }
+.carte .sym { position: absolute; top: 1px; right: 5px; font-size: .62em; line-height: 1.2; }
+.carte.vert  { background: var(--vert);  border-color: var(--vert);  color: #fff; }
+.carte.rouge { background: var(--rouge); border-color: var(--rouge); color: #fff; }
+.carte.noir  { background: var(--noir);  border-color: var(--noir);  color: #fff; }
+.carte.atten { opacity: .45; }
+.carte.gris  { background: var(--gris); border-color: #b5b5b5; color: var(--gris-texte); }
+.carte.vide  { background: #fff; border-color: #ece8de; }
+.carte.vide .mot { visibility: hidden; }
+.carte.sel   { outline: 4px solid var(--focus); outline-offset: -2px; transform: scale(.96); }
+.carte.fatal { outline: 4px solid #f5b400; outline-offset: -2px; }
+
+/* Zone d'actions */
+#actions {
+  flex: 0 0 var(--h-actions);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.rang { display: flex; gap: 8px; align-items: stretch; }
+.rang > * { flex: 1 1 0; min-width: 0; }
+.rang > .fixe { flex: 0 0 auto; }
+.btn {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--texte);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn.primaire { background: var(--texte); color: #fff; }
+.btn.gros { min-height: 60px; font-size: 20px; padding: 0 32px; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn[aria-pressed="true"] { background: var(--texte); color: #fff; }
+.btn.lien { min-height: 44px; border: 0; background: transparent; text-decoration: underline; font-weight: 400; font-size: 14px; }
+
+.pret {
+  min-height: 56px; display: flex; align-items: center; gap: 10px; padding: 6px 12px;
+  border: 2px solid var(--texte); border-radius: 12px; background: #fff; cursor: pointer;
+}
+.pret input { width: 24px; height: 24px; flex: 0 0 auto; accent-color: var(--texte); }
+.pret b { display: block; font-size: 15px; }
+.pret small { display: block; font-size: 12px; font-weight: 400; color: #555; }
+.pret.eq-A { border-color: var(--eq-a); }
+.pret.eq-B { border-color: var(--eq-b); }
+.pret.coche { background: #e8f5ec; }
+
+.msg { min-height: 16px; font-size: 12.5px; color: var(--rouge); font-weight: 600; padding-left: 4px; }
+#indice-saisie {
+  width: 100%; height: 48px; padding: 0 12px; font: inherit; font-size: 18px;
+  border: 2px solid var(--texte); border-radius: 12px; background: #fff;
+  -webkit-user-select: text; user-select: text;
+}
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper button { width: 48px; padding: 0; font-size: 24px; }
+.stepper output { min-width: 34px; text-align: center; font-size: 24px; font-weight: 800; }
+.info-indice { text-align: center; line-height: 1.25; }
+.info-indice .gros { font-size: 22px; font-weight: 800; }
+.info-indice .petit { font-size: 13px; color: #444; }
+
+/* Écrans plein format */
+.plein {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 24px; text-align: center;
+  background: var(--fond); color: var(--texte);
+}
+.plein h1 { margin: 0; font-size: 34px; line-height: 1.1; }
+.plein p { margin: 0; font-size: 17px; max-width: 24em; }
+.plein .petit { font-size: 14px; opacity: .85; }
+.passage { color: #fff; }
+.passage.eq-A { background: var(--eq-a); }
+.passage.eq-B { background: var(--eq-b); }
+.passage .recap {
+  background: rgba(255,255,255,.18); border-radius: 12px; padding: 10px 16px; font-size: 15px;
+  display: flex; flex-direction: column; gap: 4px; text-align: left;
+}
+.passage .btn { border-color: #fff; background: #fff; color: #111; }
+.passage .btn.lien { background: transparent; color: #fff; border: 0; }
+.decompte .nombre { font-size: 140px; font-weight: 800; line-height: 1; }
+.retour { color: #fff; }
+.retour-vert { background: var(--vert); }
+.retour-rouge { background: var(--rouge); }
+.retour-noir { background: #000; }
+.retour .mot-retour { font-size: 40px; font-weight: 800; }
+.fin-victoire { background: var(--vert); color: #fff; }
+.fin-defaite { background: #111; color: #fff; }
+.fin-victoire .btn, .fin-defaite .btn { border-color: #fff; background: #fff; color: #111; }
+.fin-victoire .btn.primaire, .fin-defaite .btn.primaire { background: #fff; color: #111; }
+.plein .emoji { font-size: 72px; line-height: 1; }
+.plein.haut { justify-content: flex-start; overflow-y: auto; align-items: stretch; text-align: left; }
+.plein.haut h1 { text-align: center; font-size: 26px; }
+.recap-liste { display: flex; flex-direction: column; gap: 10px; }
+.recap-liste .entree { background: #fff; border: 2px solid var(--bord); border-radius: 12px; padding: 10px 12px; }
+.recap-liste .entree.eq-A { border-color: var(--eq-a); }
+.recap-liste .entree.eq-B { border-color: var(--eq-b); }
+.recap-liste .indice-mot { font-weight: 800; }
+.recap-liste .props { margin-top: 4px; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="bandeau"></header>
+  <main id="zone-grille"><div id="grille"></div></main>
+  <footer id="actions"></footer>
+</div>
+<div id="passage" class="plein passage" hidden></div>
+<div id="decompte" class="plein decompte" hidden></div>
+<div id="retour" class="plein retour" hidden></div>
+<div id="fin-ecran" class="plein" hidden></div>
+<div id="recap" class="plein haut" hidden></div>
+<noscript><p style="padding:24px">Ce jeu a besoin de JavaScript pour fonctionner.</p></noscript>
+
+<script id="mots">
+/* Liste de mots : noms communs et noms propres très connus de tous.
+   Toute modification de la liste doit incrémenter MOTS_VERSION (une seed n'est
+   reproductible qu'avec la même version). */
+(function () {
+  'use strict';
+  var B = window.Banger = window.Banger || {};
+  B.MOTS_VERSION = 1;
+  B.MOTS = [
+    // Animaux
+    'chat', 'chien', 'cheval', 'vache', 'cochon', 'mouton', 'poule', 'canard', 'lapin', 'souris',
+    'lion', 'tigre', 'éléphant', 'girafe', 'singe', 'ours', 'loup', 'renard', 'serpent', 'grenouille',
+    'poisson', 'requin', 'baleine', 'dauphin', 'oiseau', 'aigle', 'hibou', 'papillon', 'abeille', 'fourmi',
+    'araignée', 'mouche', 'escargot', 'tortue', 'crocodile', 'kangourou', 'panda', 'pingouin', 'zèbre', 'chameau',
+    'perroquet', 'cygne', 'coq', 'âne', 'chèvre', 'écureuil', 'hérisson', 'crabe', 'pieuvre', 'dinosaure',
+    'dragon', 'licorne', 'moustique', 'coccinelle', 'chenille', 'taureau', 'biche', 'cerf', 'sanglier', 'rat',
+    'pigeon', 'corbeau', 'mouette', 'hippopotame', 'rhinocéros', 'gorille', 'crevette', 'méduse',
+    // Nourriture et boissons
+    'pain', 'fromage', 'beurre', 'lait', 'œuf', 'pomme', 'poire', 'banane', 'orange', 'citron',
+    'fraise', 'cerise', 'raisin', 'ananas', 'melon', 'pêche', 'tomate', 'carotte', 'frite', 'salade',
+    'oignon', 'champignon', 'riz', 'pâtes', 'pizza', 'hamburger', 'gâteau', 'chocolat', 'bonbon', 'glace',
+    'sucre', 'sel', 'poivre', 'miel', 'confiture', 'crêpe', 'croissant', 'baguette', 'soupe', 'jambon',
+    'saucisse', 'poulet', 'steak', 'café', 'thé', 'vin', 'bière', 'jus', 'yaourt', 'biscuit',
+    'tarte', 'noix', 'citrouille', 'haricot', 'maïs', 'olive', 'cacahuète', 'pastèque', 'framboise', 'abricot',
+    'prune', 'radis', 'concombre', 'popcorn', 'sandwich', 'omelette',
+    // Maison et objets
+    'maison', 'table', 'chaise', 'lit', 'porte', 'fenêtre', 'mur', 'toit', 'escalier', 'cuisine',
+    'salon', 'jardin', 'garage', 'miroir', 'lampe', 'tapis', 'rideau', 'canapé', 'armoire', 'étagère',
+    'horloge', 'réveil', 'téléphone', 'télévision', 'ordinateur', 'clavier', 'livre', 'cahier', 'crayon', 'stylo',
+    'gomme', 'règle', 'ciseaux', 'papier', 'enveloppe', 'lettre', 'clé', 'couteau', 'fourchette', 'cuillère',
+    'assiette', 'verre', 'tasse', 'bol', 'casserole', 'poêle', 'bouteille', 'panier', 'sac', 'valise',
+    'parapluie', 'lunettes', 'montre', 'bague', 'collier', 'couronne', 'chapeau', 'casquette', 'chaussure', 'chaussette',
+    'pantalon', 'chemise', 'robe', 'manteau', 'écharpe', 'gant', 'bonnet', 'cravate', 'ceinture', 'pyjama',
+    'brosse', 'savon', 'serviette', 'bougie', 'allumette', 'marteau', 'clou', 'échelle', 'corde', 'ballon',
+    'poupée', 'peluche', 'cadeau', 'jouet', 'puzzle', 'boîte', 'tiroir', 'serrure', 'coffre', 'cadenas',
+    'balai', 'éponge', 'poubelle', 'radiateur', 'ventilateur', 'frigo', 'four', 'bouton', 'aiguille', 'fil',
+    'chaîne', 'seau', 'bocal', 'oreiller', 'couverture', 'matelas', 'baignoire', 'douche', 'lavabo', 'robinet',
+    // Transports
+    'voiture', 'vélo', 'moto', 'camion', 'bus', 'train', 'avion', 'bateau', 'hélicoptère', 'fusée',
+    'tracteur', 'ambulance', 'taxi', 'métro', 'tramway', 'gare', 'aéroport', 'port', 'pont', 'route',
+    'tunnel', 'trottoir', 'radeau', 'ancre', 'voile', 'roue', 'volant', 'pneu', 'essence', 'moteur',
+    'panneau',
+    // Nature
+    'soleil', 'lune', 'étoile', 'nuage', 'pluie', 'neige', 'vent', 'orage', 'éclair', 'montagne',
+    'volcan', 'rivière', 'fleuve', 'lac', 'mer', 'océan', 'plage', 'île', 'désert', 'forêt',
+    'arbre', 'fleur', 'rose', 'herbe', 'feuille', 'champ', 'sable', 'caillou', 'rocher', 'grotte',
+    'cascade', 'terre', 'ciel', 'planète', 'tempête', 'brouillard', 'feu', 'eau', 'fumée', 'cendre',
+    'bulle', 'ombre', 'lumière', 'nuit', 'jour', 'glaçon', 'jungle', 'prairie', 'colline', 'vallée',
+    'falaise', 'marais', 'source', 'branche', 'racine', 'graine', 'tulipe', 'sapin', 'palmier', 'bambou',
+    'cactus', 'coquillage', 'corail',
+    // Corps humain
+    'tête', 'main', 'pied', 'bras', 'jambe', 'doigt', 'œil', 'nez', 'bouche', 'oreille',
+    'dent', 'langue', 'cœur', 'dos', 'ventre', 'genou', 'coude', 'épaule', 'visage', 'barbe',
+    'ongle', 'os', 'peau', 'cerveau', 'cheveu', 'cou', 'joue', 'front', 'sourcil', 'lèvre',
+    'pouce', 'talon', 'muscle', 'squelette',
+    // Personnes, métiers, personnages
+    'médecin', 'infirmière', 'professeur', 'élève', 'policier', 'pompier', 'boulanger', 'boucher', 'facteur', 'cuisinier',
+    'fermier', 'pilote', 'soldat', 'roi', 'reine', 'prince', 'princesse', 'chevalier', 'sorcier', 'magicien',
+    'pirate', 'cowboy', 'clown', 'détective', 'voleur', 'fantôme', 'sorcière', 'géant', 'bébé', 'enfant',
+    'papa', 'maman', 'frère', 'sœur', 'oncle', 'tante', 'ami', 'voisin', 'chanteur', 'acteur',
+    'peintre', 'artiste', 'astronaute', 'robot', 'extraterrestre', 'vampire', 'momie', 'ange', 'fée', 'nain',
+    'ogre', 'sirène', 'marin', 'capitaine', 'berger', 'jardinier', 'plombier', 'avocat', 'juge', 'coiffeur',
+    'dentiste', 'vétérinaire', 'serveur', 'footballeur', 'nageur', 'coureur', 'danseur', 'musicien', 'écrivain', 'journaliste',
+    'président', 'espion',
+    // Lieux
+    'école', 'hôpital', 'église', 'château', 'musée', 'cinéma', 'théâtre', 'cirque', 'zoo', 'supermarché',
+    'marché', 'restaurant', 'hôtel', 'banque', 'bibliothèque', 'piscine', 'stade', 'parc', 'ferme', 'usine',
+    'phare', 'tour', 'pyramide', 'cathédrale', 'mairie', 'boulangerie', 'pharmacie', 'camping', 'boutique', 'magasin',
+    'bureau', 'chambre', 'grenier', 'cave', 'balcon', 'terrasse', 'village', 'ville', 'campagne', 'palais',
+    'temple', 'cabane', 'igloo', 'tente', 'moulin', 'fontaine', 'statue', 'monument', 'place', 'rue',
+    'quartier',
+    // Géographie (noms propres)
+    'Paris', 'France', 'Londres', 'Rome', 'Madrid', 'Berlin', 'Amérique', 'Afrique', 'Europe', 'Asie',
+    'Italie', 'Espagne', 'Allemagne', 'Angleterre', 'Japon', 'Chine', 'Brésil', 'Mexique', 'Canada', 'Égypte',
+    'Australie', 'Marseille', 'Lyon', 'Tokyo', 'Venise', 'Bretagne', 'Alpes', 'Sahara', 'Amazonie', 'Antarctique',
+    'Suisse', 'Belgique', 'Russie', 'Inde', 'Grèce', 'Portugal', 'Atlantique', 'Méditerranée', 'Corse', 'Normandie',
+    'Versailles', 'Louvre', 'Eiffel', 'Titanic', 'Mars', 'Jupiter', 'Saturne', 'Vénus',
+    // Personnages, personnalités, fêtes (noms propres)
+    'Napoléon', 'Einstein', 'Mozart', 'Picasso', 'Cléopâtre', 'César', 'Molière', 'Zorro', 'Astérix', 'Obélix',
+    'Tintin', 'Mickey', 'Batman', 'Superman', 'Pinocchio', 'Cendrillon', 'Shrek', 'Pikachu', 'Dracula', 'Merlin',
+    'Hercule', 'Zeus', 'Tarzan', 'Aladdin', 'Disney', 'Noël', 'Halloween', 'Pâques',
+    // Culture, sport, techno
+    'musique', 'guitare', 'piano', 'violon', 'tambour', 'trompette', 'flûte', 'chanson', 'danse', 'film',
+    'photo', 'peinture', 'tableau', 'journal', 'magazine', 'radio', 'jeu', 'dé', 'échecs', 'cartes',
+    'football', 'tennis', 'basket', 'rugby', 'natation', 'ski', 'course', 'but', 'filet', 'médaille',
+    'trophée', 'coupe', 'champion', 'arbitre', 'sifflet', 'raquette', 'golf', 'boxe', 'judo', 'karaté',
+    'surf', 'patin', 'orchestre', 'concert', 'micro', 'casque', 'caméra', 'écran', 'antenne', 'satellite',
+    'internet', 'console', 'télécommande', 'spectacle', 'magie',
+    // Divers
+    'argent', 'pièce', 'billet', 'trésor', 'diamant', 'or', 'fer', 'bois', 'pierre', 'rêve',
+    'secret', 'histoire', 'amour', 'épée', 'arc', 'flèche', 'bouclier', 'canon', 'drapeau', 'boussole',
+    'télescope', 'microscope', 'carte', 'masque', 'costume', 'déguisement', 'fête', 'anniversaire', 'mariage', 'vacances',
+    'voyage', 'aventure', 'monstre', 'piège', 'énigme', 'mystère', 'labyrinthe', 'calendrier', 'pile', 'prise',
+    'câble', 'batterie', 'machine', 'outil', 'scie', 'pelle', 'râteau', 'tournevis', 'pinceau', 'encre',
+    'colle', 'timbre', 'passeport', 'ticket', 'trousse', 'cartable'
+  ];
+})();
+</script>
+
+<script id="aleatoire">
+/* Générateur pseudo-aléatoire déterministe à partir d'une seed.
+   Math.random() ne sert qu'à créer une nouvelle seed. */
+(function () {
+  'use strict';
+  var B = window.Banger = window.Banger || {};
+  var ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+  function normaliserSeed(s) {
+    return String(s).trim().toUpperCase().replace(/\s+/g, '');
+  }
+
+  // Hachage de chaîne vers un entier 32 bits non signé (FNV-1a + mélange final).
+  function hacher(chaine) {
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < chaine.length; i++) {
+      h ^= chaine.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    h ^= h >>> 16; h = Math.imul(h, 2246822507) >>> 0;
+    h ^= h >>> 13; h = Math.imul(h, 3266489909) >>> 0;
+    h ^= h >>> 16;
+    return h >>> 0;
+  }
+
+  // mulberry32 : renvoie une fonction qui donne un nombre dans [0, 1[.
+  function mulberry32(a) {
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function creerPRNG(seed) {
+    return mulberry32(hacher(normaliserSeed(seed)));
+  }
+
+  // Entier uniforme dans [min, max] (bornes incluses).
+  function entre(rng, min, max) {
+    return min + Math.floor(rng() * (max - min + 1));
+  }
+
+  // Mélange de Fisher-Yates (renvoie une copie).
+  function melanger(tableau, rng) {
+    var t = tableau.slice();
+    for (var i = t.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var tmp = t[i]; t[i] = t[j]; t[j] = tmp;
+    }
+    return t;
+  }
+
+  function nouvelleSeed() {
+    var s = '';
+    for (var i = 0; i < 6; i++) s += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));
+    return s;
+  }
+
+  B.Aleatoire = {
+    ALPHABET: ALPHABET,
+    normaliserSeed: normaliserSeed,
+    hacher: hacher,
+    creerPRNG: creerPRNG,
+    entre: entre,
+    melanger: melanger,
+    nouvelleSeed: nouvelleSeed
+  };
+})();
+</script>
+
+<script id="jeu">
+/* Logique du jeu : fonctions pures (état + action -> nouvel état).
+   Aucun accès au DOM ni à localStorage. */
+(function () {
+  'use strict';
+  var B = window.Banger = window.Banger || {};
+  var R = B.Aleatoire;
+
+  var FORMAT = 1;
+  var NB_MOTS = 25;
+  var ECRANS = ['preparation', 'compteARebours', 'passageDonneuse', 'indice', 'passageDevineuse', 'devinette', 'fin'];
+
+  function autre(equipe) { return equipe === 'A' ? 'B' : 'A'; }
+
+  // Minuscules, sans accents, « œ » -> « oe » : sert aux comparaisons de mots.
+  function normaliser(s) {
+    return String(s).toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/œ/g, 'oe').replace(/æ/g, 'ae')
+      .trim();
+  }
+
+  function cloner(etat) {
+    var c = JSON.parse(JSON.stringify(etat));
+    c.retour = null;
+    return c;
+  }
+
+  function exiger(condition, message) {
+    if (!condition) throw new Error(message || 'Action impossible dans cet état');
+  }
+
+  // --- Création d'une partie -------------------------------------------------
+
+  // Clé d'une équipe : pour chaque mot, 'vert', 'rouge' ou 'noir'.
+  function creerCle(rng, nbVerts, nbNoirs) {
+    var indices = [];
+    for (var i = 0; i < NB_MOTS; i++) indices.push(i);
+    var ordre = R.melanger(indices, rng);
+    var cle = [];
+    for (var k = 0; k < NB_MOTS; k++) cle.push('rouge');
+    for (var v = 0; v < nbVerts; v++) cle[ordre[v]] = 'vert';
+    for (var n = 0; n < nbNoirs; n++) cle[ordre[nbVerts + n]] = 'noir';
+    return cle;
+  }
+
+  // Ordre des tirages (fait partie du format, voir docs/specification.md 3.2) :
+  // mots, nA, nB, mA, mB, clé de A, clé de B, pile ou face.
+  function creerPartie(seed) {
+    var graine = R.normaliserSeed(seed);
+    var rng = R.creerPRNG(graine);
+    var mots = R.melanger(B.MOTS, rng).slice(0, NB_MOTS);
+    var nA = R.entre(rng, 7, 10);
+    var nB = R.entre(rng, 7, 10);
+    var mA = R.entre(rng, 1, 2);
+    var mB = R.entre(rng, 1, 2);
+    var cleA = creerCle(rng, nA, mA);
+    var cleB = creerCle(rng, nB, mB);
+    var pile = rng() < 0.5 ? 'A' : 'B';
+    var premiere = nA > nB ? 'A' : (nB > nA ? 'B' : pile);
+    return {
+      versionFormat: FORMAT,
+      versionMots: B.MOTS_VERSION,
+      seed: graine,
+      mots: mots,
+      cle: { A: cleA, B: cleB },
+      tours: { A: Math.ceil(nA / 2), B: Math.ceil(nB / 2) },
+      trouves: { A: [], B: [] },
+      erreurs: { A: [], B: [] },
+      pret: { A: false, B: false },
+      ecran: 'preparation',
+      premiere: premiere,
+      donneuse: null,
+      indice: null,
+      selection: null,
+      historique: [],
+      resultat: null,
+      retour: null
+    };
+  }
+
+  // --- Lecture de l'état -----------------------------------------------------
+
+  function nbVerts(etat, equipe) {
+    return etat.cle[equipe].filter(function (c) { return c === 'vert'; }).length;
+  }
+
+  // Mots verts de l'équipe pas encore trouvés par l'autre équipe.
+  function restants(etat, equipe) {
+    return nbVerts(etat, equipe) - etat.trouves[equipe].length;
+  }
+
+  function peutSelectionner(etat, i) {
+    var X = etat.donneuse, Y = autre(X);
+    return etat.trouves[X].indexOf(i) < 0 && etat.erreurs[Y].indexOf(i) < 0;
+  }
+
+  // Nombre maximal de mots que l'équipe qui devine peut trouver pendant la manche.
+  function limiteManche(etat) { return etat.indice.nombre + 1; }
+
+  // Renvoie un message d'erreur, ou null si l'indice est valide.
+  function verifierIndice(etat, texte) {
+    var t = String(texte).trim();
+    if (!t) return 'Écrivez un indice.';
+    if (/\s/.test(t)) return 'L’indice doit être un seul mot.';
+    var n = normaliser(t);
+    for (var i = 0; i < etat.mots.length; i++) {
+      if (normaliser(etat.mots[i]) === n) return 'L’indice ne peut pas être un mot de la grille.';
+    }
+    return null;
+  }
+
+  // --- Préparation -----------------------------------------------------------
+
+  function basculerPret(etat, equipe, valeur) {
+    exiger(etat.ecran === 'preparation' || etat.ecran === 'compteARebours');
+    var c = cloner(etat);
+    c.pret[equipe] = !!valeur;
+    c.ecran = (c.pret.A && c.pret.B) ? 'compteARebours' : 'preparation';
+    return c;
+  }
+
+  function annulerCompteARebours(etat) {
+    exiger(etat.ecran === 'compteARebours');
+    var c = cloner(etat);
+    c.pret = { A: false, B: false };
+    c.ecran = 'preparation';
+    return c;
+  }
+
+  function finCompteARebours(etat) {
+    exiger(etat.ecran === 'compteARebours');
+    var c = cloner(etat);
+    c.ecran = 'passageDonneuse';
+    c.donneuse = c.premiere;
+    return c;
+  }
+
+  // Bouton « Prêt » des écrans de passage.
+  function confirmerPassage(etat) {
+    exiger(etat.ecran === 'passageDonneuse' || etat.ecran === 'passageDevineuse');
+    var c = cloner(etat);
+    c.ecran = etat.ecran === 'passageDonneuse' ? 'indice' : 'devinette';
+    return c;
+  }
+
+  // --- Donner un indice ------------------------------------------------------
+
+  function validerIndice(etat, texte, nombre) {
+    exiger(etat.ecran === 'indice');
+    var msg = verifierIndice(etat, texte);
+    if (msg) throw new Error(msg);
+    var X = etat.donneuse;
+    exiger(Number.isInteger(nombre) && nombre >= 0 && nombre <= restants(etat, X), 'Nombre invalide');
+    exiger(etat.tours[X] >= 1, 'Plus de tours');
+    var c = cloner(etat);
+    var mot = String(texte).trim();
+    c.tours[X] -= 1;
+    c.indice = { mot: mot, nombre: nombre, trouvesCetteManche: 0 };
+    c.historique.push({ equipe: X, mot: mot, nombre: nombre, propositions: [], arretVolontaire: false });
+    c.selection = null;
+    c.ecran = 'passageDevineuse';
+    return c;
+  }
+
+  // --- Deviner ---------------------------------------------------------------
+
+  function selectionner(etat, i) {
+    exiger(etat.ecran === 'devinette');
+    var c = cloner(etat);
+    if (!peutSelectionner(c, i)) return c;
+    c.selection = (c.selection === i) ? null : i;
+    return c;
+  }
+
+  function victoireAtteinte(etat) {
+    return restants(etat, 'A') === 0 && restants(etat, 'B') === 0;
+  }
+
+  function terminer(c, resultat) {
+    c.ecran = 'fin';
+    c.resultat = resultat;
+    c.indice = null;
+    c.selection = null;
+  }
+
+  // Fin de manche (spécification 5.6) : défaite si une équipe ne peut plus finir,
+  // sinon désigne la prochaine équipe qui donne un indice.
+  function finDeManche(c) {
+    var eqs = ['A', 'B'];
+    for (var k = 0; k < eqs.length; k++) {
+      var e = eqs[k];
+      if (restants(c, e) > 0 && c.tours[e] === 0) {
+        terminer(c, { type: 'defaite', cause: 'tours', equipe: e });
+        return c;
+      }
+    }
+    var X = c.donneuse, Y = autre(X);
+    c.donneuse = restants(c, Y) > 0 ? Y : X;
+    c.ecran = 'passageDonneuse';
+    c.indice = null;
+    c.selection = null;
+    return c;
+  }
+
+  function validerSelection(etat) {
+    exiger(etat.ecran === 'devinette' && etat.selection !== null);
+    var c = cloner(etat);
+    var X = c.donneuse, Y = autre(X);
+    var i = c.selection;
+    c.selection = null;
+    var couleur = c.cle[X][i];
+    c.historique[c.historique.length - 1].propositions.push({ indice: i, resultat: couleur });
+    c.retour = { indice: i, mot: c.mots[i], couleur: couleur, equipe: Y, suite: 'continue' };
+
+    if (couleur === 'noir') {
+      terminer(c, { type: 'defaite', cause: 'noir', mot: c.mots[i], indice: i, equipe: Y });
+    } else if (couleur === 'rouge') {
+      c.erreurs[Y].push(i);
+      finDeManche(c);
+    } else {
+      c.trouves[X].push(i);
+      c.indice.trouvesCetteManche += 1;
+      if (victoireAtteinte(c)) {
+        terminer(c, { type: 'victoire' });
+      } else if (c.indice.trouvesCetteManche >= limiteManche(c) || restants(c, X) === 0) {
+        finDeManche(c);
+      }
+    }
+    if (c.ecran === 'fin') c.retour.suite = c.resultat.type;
+    else if (c.ecran !== 'devinette') c.retour.suite = 'fin-manche';
+    return c;
+  }
+
+  // « Arrêter de deviner » : disponible à tout moment, même sans proposition.
+  function arreter(etat) {
+    exiger(etat.ecran === 'devinette');
+    var c = cloner(etat);
+    c.historique[c.historique.length - 1].arretVolontaire = true;
+    return finDeManche(c);
+  }
+
+  function abandonner(etat) {
+    exiger(etat.ecran !== 'fin');
+    var c = cloner(etat);
+    terminer(c, { type: 'defaite', cause: 'abandon' });
+    return c;
+  }
+
+  // --- Sauvegarde ------------------------------------------------------------
+
+  function etatValide(e) {
+    try {
+      if (!e || e.versionFormat !== FORMAT || e.versionMots !== B.MOTS_VERSION) return false;
+      if (ECRANS.indexOf(e.ecran) < 0) return false;
+      if (!Array.isArray(e.mots) || e.mots.length !== NB_MOTS) return false;
+      if (!e.cle || e.cle.A.length !== NB_MOTS || e.cle.B.length !== NB_MOTS) return false;
+      if (!e.tours || !e.trouves || !e.erreurs || !e.pret || !Array.isArray(e.historique)) return false;
+      if ((e.ecran === 'passageDevineuse' || e.ecran === 'devinette') && !e.indice) return false;
+      if (e.ecran !== 'preparation' && e.ecran !== 'compteARebours' && e.donneuse !== 'A' && e.donneuse !== 'B') return false;
+      if (e.ecran === 'fin' && !e.resultat) return false;
+      return true;
+    } catch (x) {
+      return false;
+    }
+  }
+
+  // Une reprise ne retombe jamais sur un écran qui révèle une clé.
+  function reprendre(e) {
+    var c = cloner(e);
+    c.selection = null;
+    if (c.ecran === 'compteARebours') { c.ecran = 'preparation'; c.pret = { A: false, B: false }; }
+    else if (c.ecran === 'indice') c.ecran = 'passageDonneuse';
+    else if (c.ecran === 'devinette') c.ecran = 'passageDevineuse';
+    return c;
+  }
+
+  B.Jeu = {
+    FORMAT: FORMAT,
+    NB_MOTS: NB_MOTS,
+    autre: autre,
+    normaliser: normaliser,
+    creerPartie: creerPartie,
+    nbVerts: nbVerts,
+    restants: restants,
+    peutSelectionner: peutSelectionner,
+    limiteManche: limiteManche,
+    verifierIndice: verifierIndice,
+    basculerPret: basculerPret,
+    annulerCompteARebours: annulerCompteARebours,
+    finCompteARebours: finCompteARebours,
+    confirmerPassage: confirmerPassage,
+    validerIndice: validerIndice,
+    selectionner: selectionner,
+    validerSelection: validerSelection,
+    arreter: arreter,
+    abandonner: abandonner,
+    etatValide: etatValide,
+    reprendre: reprendre
+  };
+})();
+</script>
+
+<script id="sauvegarde">
+/* Sauvegarde de la partie en cours dans localStorage (facultative :
+   si le stockage est indisponible, le jeu fonctionne sans reprise). */
+(function () {
+  'use strict';
+  var B = window.Banger = window.Banger || {};
+  var CLE = 'banger.etat';
+
+  B.Sauvegarde = {
+    charger: function () {
+      try {
+        var texte = window.localStorage.getItem(CLE);
+        if (!texte) return null;
+        var e = JSON.parse(texte);
+        return B.Jeu.etatValide(e) ? e : null;
+      } catch (x) {
+        return null;
+      }
+    },
+    sauver: function (etat) {
+      try {
+        window.localStorage.setItem(CLE, JSON.stringify(etat, function (k, v) {
+          return k === 'retour' ? undefined : v;
+        }));
+      } catch (x) { /* stockage indisponible : on continue sans */ }
+    },
+    effacer: function () {
+      try { window.localStorage.removeItem(CLE); } catch (x) { /* rien */ }
+    }
+  };
+})();
+</script>
+
+<script id="affichage">
+/* Rendu des écrans, ajustement de la grille et gestion des événements. */
+(function () {
+  'use strict';
+  var B = window.Banger;
+  var J = B.Jeu, S = B.Sauvegarde, R = B.Aleatoire;
+
+  var etat = null;
+  var ui = {
+    ongletFin: 'A', detailFin: false,
+    nombre: 0, texteIndice: '',
+    timer: null,
+    layout: null,
+    hMax: 0, largeurRef: 0, clavier: false
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  function el(tag, attrs, enfants) {
+    var n = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        var v = attrs[k];
+        if (k === 'class') n.className = v;
+        else if (k === 'texte') n.textContent = v;
+        else if (k.indexOf('on') === 0) n.addEventListener(k.slice(2), v);
+        else if (v === true) n.setAttribute(k, '');
+        else if (v !== false && v !== null && v !== undefined) n.setAttribute(k, v);
+      });
+    }
+    (enfants || []).forEach(function (c) {
+      n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
+
+  function vider(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+  function pluriel(n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); }
+  function chip(eq, texte) { return el('span', { class: 'chip eq-' + eq, texte: texte || ('Équipe ' + eq) }); }
+  function encadrer(mot) { return '« ' + mot + ' »'; }
+
+  // --- Changements d'état ----------------------------------------------------
+
+  function dispatch(action) {
+    var ancien = etat;
+    try {
+      etat = action();
+    } catch (x) {
+      if (window.console) console.error(x);
+      etat = ancien;
+      return;
+    }
+    if (etat.ecran === 'fin' && ancien.ecran !== 'fin') { ui.detailFin = true; ui.ongletFin = 'A'; }
+    if (etat.ecran !== 'fin') ui.detailFin = false;
+    if (etat.ecran === 'indice' && ancien.ecran !== 'indice') {
+      ui.texteIndice = '';
+      ui.nombre = Math.min(1, J.restants(etat, etat.donneuse));
+    }
+    S.sauver(etat);
+    if (etat.retour) montrerRetour(etat.retour, rendre);
+    else rendre();
+  }
+
+  // --- Grille ----------------------------------------------------------------
+
+  // options : classe, symbole, onclick (carte cliquable si présent), sel
+  function construireGrille(descripteur) {
+    var g = $('grille');
+    vider(g);
+    etat.mots.forEach(function (mot, i) {
+      var d = descripteur(i);
+      var attrs = { type: 'button', class: 'carte ' + d.classe, 'data-i': i };
+      if (!d.onclick) attrs.disabled = true;
+      else attrs.onclick = d.onclick;
+      var enfants = [el('span', { class: 'mot', texte: mot })];
+      if (d.symbole) enfants.push(el('span', { class: 'sym', 'aria-hidden': 'true', texte: d.symbole }));
+      var b = el('button', attrs, enfants);
+      if (d.classe.indexOf('vide') >= 0) b.setAttribute('aria-label', 'Mot trouvé');
+      g.appendChild(b);
+    });
+  }
+
+  function appliquerLayout(taille, minCarte, tailles) {
+    var g = $('grille');
+    g.style.setProperty('--min-carte', minCarte + 'px');
+    g.style.fontSize = taille + 'px';
+    Array.prototype.forEach.call(g.children, function (c, i) {
+      var s = c.querySelector('.mot');
+      s.style.fontSize = (tailles && tailles[i]) ? tailles[i] + 'px' : '';
+    });
+  }
+
+  // Réduit la police des mots plus larges que leur carte. Renvoie les tailles (0 = inchangée).
+  function reduireMotsLongs(taille) {
+    var g = $('grille');
+    var tailles = [];
+    Array.prototype.forEach.call(g.children, function (c) {
+      var s = c.querySelector('.mot');
+      s.style.fontSize = '';
+      var cs = window.getComputedStyle(c);
+      var dispo = c.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      var f = taille;
+      while (s.offsetWidth > dispo && f > 9) { f -= 1; s.style.fontSize = f + 'px'; }
+      tailles.push(f < taille ? f : 0);
+    });
+    return tailles;
+  }
+
+  // Cherche la plus grande police pour laquelle les 25 cartes tiennent sans défilement.
+  function ajusterGrille() {
+    var g = $('grille'), zone = $('zone-grille');
+    if (!g.children.length) return;
+    var cle = etat.seed + '|' + zone.clientWidth + '|' + zone.clientHeight;
+    if (ui.layout && ui.layout.cle === cle) {
+      appliquerLayout(ui.layout.taille, ui.layout.minCarte, ui.layout.tailles);
+      return;
+    }
+    if (ui.clavier) return;
+
+    function tient(taille, minCarte) {
+      appliquerLayout(taille, minCarte, null);
+      reduireMotsLongs(taille);
+      return g.scrollHeight <= g.clientHeight + 1;
+    }
+
+    var choix = null;
+    var essais = [44, 40, 36, 32, 28];
+    for (var k = 0; k < essais.length && !choix; k++) {
+      var minCarte = essais[k];
+      if (!tient(14, minCarte)) continue;
+      var bas = 14, haut = 28, meilleur = 14;
+      while (bas <= haut) {
+        var milieu = (bas + haut) >> 1;
+        if (tient(milieu, minCarte)) { meilleur = milieu; bas = milieu + 1; } else { haut = milieu - 1; }
+      }
+      choix = { taille: meilleur, minCarte: minCarte };
+    }
+    if (!choix) choix = { taille: 12, minCarte: 28 };
+
+    appliquerLayout(choix.taille, choix.minCarte, null);
+    var tailles = reduireMotsLongs(choix.taille);
+    appliquerLayout(choix.taille, choix.minCarte, tailles);
+    ui.layout = { cle: cle, taille: choix.taille, minCarte: choix.minCarte, tailles: tailles };
+  }
+
+  // --- Zones communes --------------------------------------------------------
+
+  function bandeau(gauche, droite) {
+    var b = $('bandeau');
+    vider(b);
+    b.appendChild(gauche);
+    if (droite) b.appendChild(droite);
+  }
+
+  function actions(noeuds) {
+    var a = $('actions');
+    vider(a);
+    noeuds.forEach(function (n) { a.appendChild(n); });
+  }
+
+  function cacherSurcouches() {
+    ['passage', 'decompte', 'retour', 'fin-ecran', 'recap'].forEach(function (id) { $(id).hidden = true; });
+  }
+
+  // --- Écran : préparation ---------------------------------------------------
+
+  function rendrePreparation() {
+    var seed = el('input', {
+      type: 'text', value: etat.seed, maxlength: 16, autocomplete: 'off', autocapitalize: 'characters',
+      autocorrect: 'off', spellcheck: 'false', 'aria-label': 'Seed de la partie'
+    });
+    seed.value = etat.seed;
+    function appliquer() {
+      var s = R.normaliserSeed(seed.value);
+      if (/^[A-Z0-9]{1,16}$/.test(s) && s !== etat.seed) dispatch(function () { return J.creerPartie(s); });
+      else seed.value = etat.seed;
+    }
+    seed.addEventListener('change', appliquer);
+    seed.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') seed.blur(); });
+
+    bandeau(
+      el('div', { class: 'titre', texte: 'Le Jeu Masterclass, Un Banger' }),
+      el('label', { class: 'seed' }, ['Seed', seed])
+    );
+
+    construireGrille(function () { return { classe: 'neutre' }; });
+
+    function pret(eq) {
+      var cb = el('input', { type: 'checkbox', id: 'pret-' + eq, checked: etat.pret[eq] });
+      cb.addEventListener('change', function () {
+        dispatch(function () { return J.basculerPret(etat, eq, cb.checked); });
+      });
+      return el('label', { class: 'pret eq-' + eq + (etat.pret[eq] ? ' coche' : '') }, [
+        cb,
+        el('span', {}, [
+          el('b', { texte: 'Équipe ' + eq + ' prête' }),
+          el('small', { texte: pluriel(J.nbVerts(etat, eq), 'mot') + ' · ' + pluriel(etat.tours[eq], 'tour') })
+        ])
+      ]);
+    }
+
+    actions([
+      el('button', {
+        type: 'button', class: 'btn', texte: 'Changer les mots',
+        onclick: function () { dispatch(function () { return J.creerPartie(R.nouvelleSeed()); }); }
+      }),
+      el('div', { class: 'rang' }, [pret('A'), pret('B')])
+    ]);
+  }
+
+  // --- Compte à rebours ------------------------------------------------------
+
+  function arreterDecompte() {
+    if (ui.timer) { clearInterval(ui.timer); ui.timer = null; }
+  }
+
+  function afficherDecompte(n) {
+    var d = $('decompte');
+    vider(d);
+    d.appendChild(el('p', { texte: 'La partie commence dans…' }));
+    d.appendChild(el('div', { class: 'nombre', 'aria-live': 'polite', texte: String(n) }));
+    d.appendChild(el('button', {
+      type: 'button', class: 'btn', texte: 'Annuler',
+      onclick: function () { arreterDecompte(); dispatch(function () { return J.annulerCompteARebours(etat); }); }
+    }));
+    d.hidden = false;
+  }
+
+  function demarrerDecompte() {
+    if (ui.timer) return;
+    var n = 3;
+    afficherDecompte(n);
+    ui.timer = setInterval(function () {
+      n -= 1;
+      if (n > 0) afficherDecompte(n);
+      else {
+        arreterDecompte();
+        dispatch(function () { return J.finCompteARebours(etat); });
+      }
+    }, 1000);
+  }
+
+  // --- Écrans de passage -----------------------------------------------------
+
+  function rendrePassage() {
+    var donneuse = etat.ecran === 'passageDonneuse';
+    var eq = donneuse ? etat.donneuse : J.autre(etat.donneuse);
+    var p = $('passage');
+    vider(p);
+    p.className = 'plein passage eq-' + eq;
+
+    p.appendChild(el('p', { class: 'petit', texte: 'Passez le téléphone à l’équipe ' + eq }));
+    p.appendChild(el('h1', { texte: donneuse ? 'Tour de l’équipe ' + eq : 'Au tour de l’équipe ' + eq }));
+    p.appendChild(el('p', {
+      texte: donneuse
+        ? 'Vous allez faire deviner vos mots. L’autre équipe ne doit pas regarder l’écran.'
+        : 'Vous allez deviner. L’autre équipe ne doit rien dire ni montrer.'
+    }));
+    p.appendChild(el('div', { class: 'recap' }, ['A', 'B'].map(function (e) {
+      return el('div', { texte: 'Équipe ' + e + ' : ' + pluriel(J.restants(etat, e), 'mot') + ' à trouver · ' + pluriel(etat.tours[e], 'tour') + ' restant' + (etat.tours[e] > 1 ? 's' : '') });
+    })));
+    p.appendChild(el('button', {
+      type: 'button', class: 'btn gros', texte: 'Prêt',
+      onclick: function () { dispatch(function () { return J.confirmerPassage(etat); }); }
+    }));
+    p.appendChild(el('button', {
+      type: 'button', class: 'btn lien', texte: 'Abandonner la partie',
+      onclick: function () {
+        if (window.confirm('Abandonner la partie ? Tout le monde perd.')) dispatch(function () { return J.abandonner(etat); });
+      }
+    }));
+    p.hidden = false;
+
+    // Rien de secret derrière l'écran de passage.
+    vider($('grille'));
+    vider($('actions'));
+    vider($('bandeau'));
+  }
+
+  // --- Écran : indice --------------------------------------------------------
+
+  function rendreIndice() {
+    var X = etat.donneuse, Y = J.autre(X);
+    var max = J.restants(etat, X);
+    if (ui.nombre > max) ui.nombre = max;
+
+    bandeau(
+      el('div', {}, [chip(X, 'Équipe ' + X + ' fait deviner')]),
+      el('div', { class: 'droite', texte: 'Tours : ' + etat.tours[X] + ' · À trouver : ' + max })
+    );
+
+    construireGrille(function (i) {
+      var c = etat.cle[X][i];
+      var trouve = etat.trouves[X].indexOf(i) >= 0;
+      var erreur = etat.erreurs[Y].indexOf(i) >= 0;
+      if (c === 'vert') return trouve ? { classe: 'vert atten', symbole: '✓' } : { classe: 'vert' };
+      if (c === 'noir') return { classe: 'noir', symbole: '☠' };
+      return erreur ? { classe: 'rouge atten', symbole: '✗' } : { classe: 'rouge' };
+    });
+
+    var msg = el('div', { class: 'msg', id: 'msg-indice', 'aria-live': 'polite' });
+    var saisie = el('input', {
+      type: 'text', id: 'indice-saisie', maxlength: 30, placeholder: 'Votre indice (un seul mot)',
+      autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'done',
+      'aria-label': 'Indice'
+    });
+    saisie.value = ui.texteIndice;
+    var moins = el('button', { type: 'button', class: 'btn', texte: '−', 'aria-label': 'Un mot de moins' });
+    var plus = el('button', { type: 'button', class: 'btn', texte: '+', 'aria-label': 'Un mot de plus' });
+    var valeur = el('output', { 'aria-live': 'polite' });
+    var valider = el('button', { type: 'button', class: 'btn primaire', texte: 'Valider' });
+
+    function maj() {
+      valeur.textContent = String(ui.nombre);
+      moins.disabled = ui.nombre <= 0;
+      plus.disabled = ui.nombre >= max;
+      var erreur = J.verifierIndice(etat, saisie.value);
+      msg.textContent = (saisie.value.trim() && erreur) ? erreur : '';
+      valider.disabled = !!erreur;
+    }
+    function soumettre() {
+      if (J.verifierIndice(etat, saisie.value)) return;
+      var texte = saisie.value, nombre = ui.nombre;
+      ui.texteIndice = '';
+      dispatch(function () { return J.validerIndice(etat, texte, nombre); });
+    }
+    saisie.addEventListener('input', function () { ui.texteIndice = saisie.value; maj(); });
+    saisie.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { if (J.verifierIndice(etat, saisie.value)) saisie.blur(); else { saisie.blur(); soumettre(); } }
+    });
+    moins.addEventListener('click', function () { if (ui.nombre > 0) { ui.nombre -= 1; maj(); } });
+    plus.addEventListener('click', function () { if (ui.nombre < max) { ui.nombre += 1; maj(); } });
+    valider.addEventListener('click', soumettre);
+
+    actions([
+      msg,
+      saisie,
+      el('div', { class: 'rang' }, [
+        el('div', { class: 'stepper fixe' }, [moins, valeur, plus]),
+        valider
+      ])
+    ]);
+    maj();
+  }
+
+  // --- Écran : devinette -----------------------------------------------------
+
+  function rendreDevinette() {
+    var X = etat.donneuse, Y = J.autre(X);
+    var ind = etat.indice;
+
+    bandeau(
+      el('div', {}, [chip(Y, 'Équipe ' + Y + ' devine')]),
+      el('div', { class: 'droite', texte: 'À trouver : ' + J.restants(etat, X) })
+    );
+
+    construireGrille(function (i) {
+      if (etat.trouves[X].indexOf(i) >= 0) return { classe: 'vide' };
+      if (etat.erreurs[Y].indexOf(i) >= 0) return { classe: 'gris' };
+      return {
+        classe: 'blanc' + (etat.selection === i ? ' sel' : ''),
+        onclick: function () { dispatch(function () { return J.selectionner(etat, i); }); }
+      };
+    });
+
+    var trouves = ind.trouvesCetteManche;
+    var progression;
+    if (trouves < ind.nombre) progression = 'Trouvés : ' + trouves + ' · encore ' + (ind.nombre - trouves) + ' + 1 bonus';
+    else progression = 'Trouvés : ' + trouves + ' · dernière chance (bonus)';
+
+    var info = el('div', { class: 'info-indice' }, [
+      el('div', { class: 'gros', texte: 'Indice : ' + encadrer(ind.mot) + ' — ' + ind.nombre }),
+      el('div', { class: 'petit', texte: progression })
+    ]);
+
+    actions([
+      info,
+      el('div', { class: 'rang' }, [
+        el('button', {
+          type: 'button', class: 'btn', texte: 'Arrêter de deviner',
+          onclick: function () { dispatch(function () { return J.arreter(etat); }); }
+        }),
+        el('button', {
+          type: 'button', class: 'btn primaire', texte: 'Valider', disabled: etat.selection === null,
+          onclick: function () { dispatch(function () { return J.validerSelection(etat); }); }
+        })
+      ])
+    ]);
+  }
+
+  // --- Retour après une proposition ------------------------------------------
+
+  function montrerRetour(r, suite) {
+    var o = $('retour');
+    vider(o);
+    o.className = 'plein retour retour-' + r.couleur;
+    var titre, texte;
+    if (r.couleur === 'vert') {
+      titre = 'Bravo !';
+      texte = ' était à deviner.';
+    } else if (r.couleur === 'rouge') {
+      titre = 'Raté…';
+      texte = ' n’était pas à deviner.';
+    } else {
+      titre = '☠ Mot mortel !';
+      texte = ' était un mot mortel.';
+    }
+    var fin = {
+      'continue': 'Vous pouvez continuer.',
+      'fin-manche': 'Fin de votre tour.',
+      victoire: 'C’était le dernier mot !',
+      defaite: r.couleur === 'noir' ? 'La partie est perdue pour tout le monde…' : 'Plus personne ne peut finir…'
+    }[r.suite] || '';
+    o.appendChild(el('h1', { texte: titre }));
+    o.appendChild(el('div', { class: 'mot-retour', texte: encadrer(r.mot) }));
+    o.appendChild(el('p', { texte: 'Ce mot' + texte }));
+    o.appendChild(el('p', { texte: fin }));
+    o.hidden = false;
+
+    try {
+      if (navigator.vibrate) navigator.vibrate(r.couleur === 'vert' ? 60 : [120, 60, 120]);
+    } catch (x) { /* pas de vibration */ }
+
+    var termine = false;
+    var debut = Date.now();
+    function fermer() {
+      if (termine) return;
+      termine = true;
+      o.hidden = true;
+      o.onclick = null;
+      suite();
+    }
+    o.onclick = function () { if (Date.now() - debut > 400) fermer(); };
+    setTimeout(fermer, 1600);
+  }
+
+  // --- Écran : fin de partie -------------------------------------------------
+
+  function messageFin() {
+    var r = etat.resultat;
+    if (r.type === 'victoire') return { emoji: '🎉', titre: 'Victoire !', texte: 'Youpi, tout le monde a gagné !' };
+    if (r.cause === 'noir') {
+      return { emoji: '☠', titre: 'Défaite', texte: 'Mot mortel : ' + encadrer(r.mot) + ', choisi par l’équipe ' + r.equipe + '.' };
+    }
+    if (r.cause === 'tours') {
+      var n = J.restants(etat, r.equipe);
+      return { emoji: '⌛', titre: 'Défaite', texte: 'Plus de tours pour l’équipe ' + r.equipe + ' : il lui reste ' + pluriel(n, 'mot') + ' à faire deviner.' };
+    }
+    return { emoji: '🏳️', titre: 'Partie abandonnée', texte: 'Tout le monde a perdu.' };
+  }
+
+  function nouvellePartie() {
+    ui.detailFin = false;
+    dispatch(function () { return J.creerPartie(R.nouvelleSeed()); });
+  }
+
+  function montrerFin() {
+    var m = messageFin();
+    var o = $('fin-ecran');
+    vider(o);
+    o.className = 'plein ' + (etat.resultat.type === 'victoire' ? 'fin-victoire' : 'fin-defaite');
+    o.appendChild(el('div', { class: 'emoji', 'aria-hidden': 'true', texte: m.emoji }));
+    o.appendChild(el('h1', { texte: m.titre }));
+    o.appendChild(el('p', { texte: m.texte }));
+    o.appendChild(el('p', { class: 'petit', texte: 'Les clés des deux équipes vont être révélées. ✓ trouvé · ✗ proposé à tort · ☠ mortel' }));
+    o.appendChild(el('button', {
+      type: 'button', class: 'btn primaire gros', texte: 'Voir les clés',
+      onclick: function () { ui.detailFin = false; rendre(); }
+    }));
+    o.appendChild(el('button', { type: 'button', class: 'btn', texte: 'Nouvelle partie', onclick: nouvellePartie }));
+    o.hidden = false;
+  }
+
+  function montrerRecap() {
+    var o = $('recap');
+    vider(o);
+    o.appendChild(el('h1', { texte: 'Récapitulatif' }));
+    var liste = el('div', { class: 'recap-liste' });
+    if (!etat.historique.length) liste.appendChild(el('p', { texte: 'Aucun indice n’a été donné.' }));
+    etat.historique.forEach(function (h) {
+      var props = h.propositions.length
+        ? h.propositions.map(function (p) {
+          return etat.mots[p.indice] + ' ' + (p.resultat === 'vert' ? '✓' : (p.resultat === 'noir' ? '☠' : '✗'));
+        }).join(' · ')
+        : 'aucune proposition';
+      if (h.arretVolontaire) props += ' (arrêt volontaire)';
+      liste.appendChild(el('div', { class: 'entree eq-' + h.equipe }, [
+        el('div', {}, ['Équipe ' + h.equipe + ' : ', el('span', { class: 'indice-mot', texte: encadrer(h.mot) + ' — ' + h.nombre })]),
+        el('div', { class: 'props', texte: props })
+      ]));
+    });
+    o.appendChild(liste);
+    o.appendChild(el('button', {
+      type: 'button', class: 'btn primaire', texte: 'Fermer',
+      onclick: function () { o.hidden = true; }
+    }));
+    o.hidden = false;
+  }
+
+  function rendreFin() {
+    var m = messageFin();
+    var eq = ui.ongletFin, autreEq = J.autre(eq);
+    bandeau(
+      el('div', { class: 'titre', texte: m.emoji + ' ' + m.titre }),
+      el('div', { class: 'droite', texte: 'Clé de l’équipe ' + eq })
+    );
+
+    var fatal = (etat.resultat.type === 'defaite' && etat.resultat.cause === 'noir') ? etat.resultat.indice : -1;
+    construireGrille(function (i) {
+      var c = etat.cle[eq][i];
+      var classe = c + (i === fatal ? ' fatal' : '');
+      var symbole = '';
+      if (c === 'vert' && etat.trouves[eq].indexOf(i) >= 0) symbole = '✓';
+      else if (c === 'rouge' && etat.erreurs[autreEq].indexOf(i) >= 0) symbole = '✗';
+      else if (c === 'noir') symbole = '☠';
+      return { classe: classe, symbole: symbole };
+    });
+
+    function onglet(e) {
+      return el('button', {
+        type: 'button', class: 'btn', texte: 'Clé de ' + e, 'aria-pressed': eq === e ? 'true' : 'false',
+        onclick: function () { ui.ongletFin = e; rendre(); }
+      });
+    }
+    actions([
+      el('div', { class: 'rang' }, [onglet('A'), onglet('B')]),
+      el('div', { class: 'rang' }, [
+        el('button', { type: 'button', class: 'btn', texte: 'Récapitulatif', onclick: montrerRecap }),
+        el('button', { type: 'button', class: 'btn primaire', texte: 'Nouvelle partie', onclick: nouvellePartie })
+      ])
+    ]);
+    if (ui.detailFin) montrerFin();
+  }
+
+  // --- Rendu principal -------------------------------------------------------
+
+  function rendre() {
+    cacherSurcouches();
+    if (etat.ecran !== 'compteARebours') arreterDecompte();
+    switch (etat.ecran) {
+      case 'preparation': rendrePreparation(); break;
+      case 'compteARebours': rendrePreparation(); demarrerDecompte(); break;
+      case 'passageDonneuse':
+      case 'passageDevineuse': rendrePassage(); break;
+      case 'indice': rendreIndice(); break;
+      case 'devinette': rendreDevinette(); break;
+      case 'fin': rendreFin(); break;
+    }
+    ajusterGrille();
+  }
+
+  // --- Taille de l'écran, clavier, veille ------------------------------------
+
+  function majTaille() {
+    var vv = window.visualViewport;
+    var h = vv ? vv.height : window.innerHeight;
+    if (window.innerWidth !== ui.largeurRef) { ui.largeurRef = window.innerWidth; ui.hMax = 0; }
+    ui.hMax = Math.max(ui.hMax, window.innerHeight);
+    ui.clavier = h < ui.hMax * 0.75;
+    var racine = document.documentElement;
+    racine.style.setProperty('--vh', Math.round(h) + 'px');
+    racine.classList.toggle('clavier', ui.clavier);
+  }
+
+  var delai = null;
+  function surRedimensionnement() {
+    majTaille();
+    if (ui.clavier) { window.scrollTo(0, 0); return; }
+    clearTimeout(delai);
+    delai = setTimeout(function () { if (etat) ajusterGrille(); }, 60);
+  }
+
+  var verrou = null;
+  function demanderVeille() {
+    try {
+      if (navigator.wakeLock && document.visibilityState === 'visible') {
+        navigator.wakeLock.request('screen').then(function (v) { verrou = v; }, function () { /* refusé */ });
+      }
+    } catch (x) { /* non disponible */ }
+  }
+
+  function demarrer() {
+    var sauvegarde = S.charger();
+    etat = sauvegarde ? J.reprendre(sauvegarde) : J.creerPartie(R.nouvelleSeed());
+    if (etat.ecran === 'fin') ui.detailFin = true;
+    majTaille();
+    window.addEventListener('resize', surRedimensionnement);
+    window.addEventListener('orientationchange', surRedimensionnement);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', surRedimensionnement);
+    document.addEventListener('visibilitychange', demanderVeille);
+    document.addEventListener('click', function premier() {
+      document.removeEventListener('click', premier);
+      demanderVeille();
+    });
+    rendre();
+  }
+
+  B.Affichage = { demarrer: demarrer };
+  demarrer();
+})();
+</script>
+</body>
+</html>

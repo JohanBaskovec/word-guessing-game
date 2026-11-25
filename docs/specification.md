@@ -86,7 +86,7 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, n
 - Uniquement des **noms communs** et **noms propres** **très connus de tous**, adultes comme enfants (ex. : *chat*, *maison*, *soleil*, *pomme*, *Paris*, *Napoléon*, *Lune*…).
 - À éviter : mots rares, techniques, régionaux, argotiques, vulgaires ou choquants, mots composés de plusieurs mots si possible.
 - Pas de doublons (comparaison insensible à la casse et aux accents).
-- Taille visée **(H)** : **400 à 600 mots**, pour limiter les répétitions d'une partie à l'autre.
+- Taille : environ **700 mots** (version 1), pour limiter les répétitions d'une partie à l'autre. Un test vérifie l'absence de doublons et d'un minimum de 400 mots.
 - Longueur : majoritairement des mots courts ou moyens ; les mots longs (> 12 lettres) sont acceptés mais rares, car ils occupent une ligne entière.
 
 ---
@@ -135,13 +135,15 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, n
 ### 5.2 COMPTE À REBOURS
 
 - Affiche 3, 2, 1 (une seconde chacun).
-- **(H)** Décocher une case pendant le compte à rebours l'annule et revient en PRÉPARATION.
+- Un bouton **« Annuler »** arrête le compte à rebours, **décoche les deux cases** et revient en PRÉPARATION (le compte à rebours masque les cases elles-mêmes).
 - À la fin → PASSAGE vers l'équipe qui commence (3.5).
 
 ### 5.3 PASSAGE (écran de transition)
 
 - Écran **opaque** qui ne montre **aucune information secrète** : seulement « Tour de l'équipe X » (donneuse) ou « Au tour de l'équipe Y » (devineuse), un bouton **« Prêt »** et un rappel du score (mots restants / tours restants par équipe).
 - Il existe pour que l'appareil puisse être passé sans que l'autre équipe voie l'écran. Il apparaît **à chaque changement de rôle**, même si c'est la même équipe qui garde le téléphone (passage de « devine » à « fait deviner »).
+- Il porte la couleur de l'équipe concernée (A en bleu, B en ambre) et ne laisse rien de la grille dans le DOM.
+- Un lien discret **« Abandonner la partie »** (avec confirmation) permet de sortir d'une partie en cours : tout le monde perd (cause « abandon »). Il n'existe que sur les écrans de passage.
 
 ### 5.4 INDICE (équipe donneuse X)
 
@@ -203,6 +205,8 @@ Interaction :
 Un mot vert dans les deux clés est suivi **séparément** de chaque côté : le trouver pour X ne le compte pas comme trouvé pour Y.
 
 Seule la clé de **X** compte pendant la manche : la couleur du mot dans la clé de Y n'a aucun effet.
+
+**Écran de résultat** : après chaque « Valider », un écran plein format affiche pendant ≈ 1,6 s (ou jusqu'au toucher, après 0,4 s) le mot choisi sur fond vert, rouge ou noir (« Bravo ! », « Raté… », « Mot mortel ! ») et la suite : « Vous pouvez continuer. », « Fin de votre tour. », « C'était le dernier mot ! » ou la défaite. La logique avance immédiatement ; seul l'affichage attend.
 
 ### 5.6 Fin de manche : défaite par tours épuisés, puis enchaînement
 
@@ -335,7 +339,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 ### 8.5 Tests
 
 - Les scripts `mots`, `aleatoire` et `jeu` sont indépendants du DOM.
-- **(H)** Un script de test de développement, `tests/tests.js`, non livré aux joueurs, lit `index.html`, extrait ces trois scripts et les exécute avec Node (`node:vm` et `node:test`, intégrés à Node, sans dépendance) : `node --test tests/`.
+- Un script de test de développement, `tests/jeu.test.js`, non livré aux joueurs, lit `index.html`, extrait ces trois scripts et les exécute avec Node (`node:vm` et `node:test`, intégrés à Node, sans dépendance) : `node --test` (sans argument).
 - Cas à couvrir :
   - même seed ⇒ même partie ; seeds différentes ⇒ parties différentes ;
   - 25 mots distincts ; dans chaque clé, 7 ≤ verts ≤ 10 et 1 ≤ noirs ≤ 2, sans recouvrement à l'intérieur d'une clé ;
@@ -348,7 +352,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
   - victoire, défaite par mot noir, défaite immédiate par tours épuisés ;
   - validation de l'indice ;
   - liste de mots sans doublons (insensible à la casse et aux accents).
-- Vérification visuelle de la mise en page sur plusieurs tailles d'écran de téléphone (ex. 360 × 640, 390 × 844, 430 × 932), en particulier avec les mots les plus longs.
+- Vérification visuelle de la mise en page sur plusieurs tailles d'écran de téléphone (ex. 320 × 568, 360 × 640, 390 × 844, 430 × 932), en particulier avec les mots les plus longs. Contrôlée dans Chromium avec Playwright : aucune carte ne déborde, ni la grille ni la page ne défilent, la police descend à 14 px et la hauteur des cartes à 40 px au minimum sur les très petits écrans (44 px sinon).
 
 ---
 

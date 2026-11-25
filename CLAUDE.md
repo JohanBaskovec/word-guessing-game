@@ -14,7 +14,7 @@ Lire la spécification avant toute modification. En cas de doute ou de contradic
 
 ## Phase actuelle
 
-**Conception : on n'écrit pas de code pour l'instant.** Ne créer `index.html`, de script ou de test que si l'utilisateur le demande explicitement.
+**Première version jouable écrite** : `index.html` (jeu complet) et `tests/jeu.test.js` (tests de la logique). Les prochaines modifications doivent respecter la spécification ; toute évolution des règles passe d'abord par la documentation (voir « Quand les règles changent »).
 
 ## Contraintes non négociables
 
@@ -26,13 +26,13 @@ Lire la spécification avant toute modification. En cas de doute ou de contradic
 - Pensé pour un **téléphone en portrait** : les 25 cartes tiennent à l'écran **sans défilement**, cibles tactiles d'au moins 44 × 44 px.
 - `Math.random()` sert **uniquement** à créer une nouvelle seed. Tout le reste de la partie dérive de la seed par un PRNG déterministe, avec un ordre de tirage fixe (spécification, section 3.2).
 
-## Organisation du code (quand il existera)
+## Organisation du code
 
 - `index.html` est découpé en blocs `<script id="…">` : `mots`, `aleatoire`, `jeu`, `sauvegarde`, `affichage`.
 - `mots`, `aleatoire` et `jeu` ne touchent **ni au DOM ni à `localStorage`** : fonctions pures (état + action → nouvel état), testables avec Node.
 - L'état est un objet sérialisable en JSON (spécification, section 6). Il est sauvegardé dans `localStorage` après chaque action ; tous les accès à `localStorage` sont protégés par `try/catch`.
 - Une reprise de partie commence toujours sur un **écran de passage**, jamais sur un écran qui révèle une clé.
-- Tests de développement (non livrés aux joueurs) dans `tests/`, lancés avec `node --test tests/` : ils extraient les scripts purs de `index.html` et les exécutent via `node:vm`. Aucune dépendance.
+- Tests de développement (non livrés aux joueurs) dans `tests/`, lancés avec **`node --test`** (sans argument : Node 22 n'accepte pas un dossier) : `tests/jeu.test.js` extrait les scripts `mots`, `aleatoire` et `jeu` de `index.html` et les exécute via `node:vm`. Aucune dépendance. Les objets issus du contexte `vm` ont d'autres prototypes : comparer via JSON (voir `deepEqual` dans le fichier de test).
 
 ## Conventions
 
@@ -45,8 +45,8 @@ Lire la spécification avant toute modification. En cas de doute ou de contradic
 
 Mettre à jour **dans la même modification** : `docs/regles.md`, `docs/specification.md` (y compris le récapitulatif chiffré et les questions ouvertes), puis le code et les tests s'ils existent.
 
-## Vérifier son travail (quand il y aura du code)
+## Vérifier son travail
 
-- `node --test tests/` doit passer.
+- `node --test` doit passer.
 - Ouvrir `index.html` dans un navigateur sans réseau, faire une partie complète et vérifier qu'aucune carte ne déborde et qu'il n'y a pas de défilement, sur plusieurs tailles de téléphone (ex. 360 × 640, 390 × 844, 430 × 932), avec les mots les plus longs de la liste.
 - Vérifier qu'aucun écran de passage ne laisse voir une clé.

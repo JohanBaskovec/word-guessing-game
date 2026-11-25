@@ -87,5 +87,6 @@ Quand l'équipe Y a fini de deviner :
 - **Défaite** :
   - un mot **mortel** a été choisi ;
   - ou une équipe n'a **plus de tours** alors qu'il lui reste des mots à faire deviner : la partie s'arrête aussitôt.
+  - ou les joueurs **abandonnent** (lien « Abandonner la partie » sur les écrans où l'on se passe le téléphone).
 
 À la fin, les clés des deux équipes sont révélées et on peut lancer une nouvelle partie.

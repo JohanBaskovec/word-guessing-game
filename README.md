@@ -18,4 +18,10 @@ Tout le monde gagne ensemble… ou perd ensemble.
 
 ## État du projet
 
-Phase de conception : seule la documentation existe pour l'instant. Aucun code n'a encore été écrit.
+Première version jouable. Pour jouer : ouvrir `index.html` dans un navigateur (aucun serveur ni connexion nécessaire), ou copier le fichier sur le téléphone.
+
+Pour lancer les tests de la logique (Node 22 ou plus, aucune dépendance) :
+
+```
+node --test
+```
