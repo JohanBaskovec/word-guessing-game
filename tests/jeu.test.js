@@ -133,7 +133,7 @@ test('partie : même seed => même partie, seeds différentes => parties différ
   notDeepEqual(J.creerPartie('ABC123').mots, J.creerPartie('ABC124').mots);
 });
 
-test('partie : 25 mots distincts, 9 verts et 1 à 2 noirs par équipe, 9 tours communs', () => {
+test('partie : 25 mots distincts, 9 verts et 3 noirs par équipe, 9 tours communs', () => {
   for (const seed of seeds(300)) {
     const e = J.creerPartie(seed);
     assert.equal(e.mots.length, 25);
@@ -142,7 +142,7 @@ test('partie : 25 mots distincts, 9 verts et 1 à 2 noirs par équipe, 9 tours c
       assert.equal(e.cle[eq].length, 25);
       const v = compter(e.cle[eq], 'vert'), n = compter(e.cle[eq], 'noir');
       assert.equal(v, 9);
-      assert.ok(n >= 1 && n <= 2, 'noirs : ' + n);
+      assert.equal(n, 3);
       assert.equal(compter(e.cle[eq], 'rouge'), 25 - v - n);
     }
     assert.equal(e.tours, 9);
@@ -150,14 +150,16 @@ test('partie : 25 mots distincts, 9 verts et 1 à 2 noirs par équipe, 9 tours c
   }
 });
 
-test('partie : 1 et 2 mots noirs apparaissent, indépendamment pour chaque équipe', () => {
-  const vus = { A: new Set(), B: new Set() };
+test('partie : un mot noir n’est jamais vert dans la même clé, mais peut être vert, rouge ou noir pour l’autre équipe', () => {
+  const vus = new Set();
   for (const seed of seeds(300)) {
     const e = J.creerPartie(seed);
-    for (const eq of ['A', 'B']) vus[eq].add(compter(e.cle[eq], 'noir'));
+    for (const eq of ['A', 'B']) {
+      const autre = J.autre(eq);
+      e.cle[eq].forEach((c, i) => { if (c === 'noir') vus.add(e.cle[autre][i]); });
+    }
   }
-  deepEqual([...vus.A].sort(), [1, 2]);
-  deepEqual([...vus.B].sort(), [1, 2]);
+  deepEqual([...vus].sort(), ['noir', 'rouge', 'vert']);
 });
 
 test('partie : le nombre de tours est de 9, partagés entre les deux équipes', () => {

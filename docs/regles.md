@@ -19,7 +19,7 @@ Le jeu tire au hasard, à partir d'une **seed** (graine) :
 - **25 mots** connus de tous (noms communs ou noms propres) ;
 - pour **chaque équipe**, une **clé secrète** :
   - **9 mots verts** : les mots que cette équipe doit faire deviner à l'autre ;
-  - **1 ou 2 mots noirs (mortels)** : si l'autre équipe les choisit, la partie est perdue ;
+  - **3 mots noirs (mortels)** : si l'autre équipe en choisit un, la partie est perdue ;
   - tous les autres mots sont **rouges** : ils ne sont pas à faire deviner.
 
 **Les deux clés se recoupent.** Un mot peut être vert pour une équipe et noir pour l'autre, noir pour les deux, rouge pour l'une et vert pour l'autre… Ce n'est pas parce qu'un mot est rouge ou vert pour votre équipe qu'il l'est aussi pour l'autre !

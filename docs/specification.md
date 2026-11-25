@@ -53,14 +53,13 @@ Les points marqués **(H)** sont des **hypothèses** prises en l'absence de pré
 ### 3.2 Tirages (dans cet ordre, toujours le même)
 
 1. **25 mots** distincts tirés dans la liste de mots (mélange de Fisher-Yates, on garde les 25 premiers).
-2. **Nombre de mots noirs** : `mA` puis `mB`, chacun tiré dans `{1, 2}`. (Le nombre de mots verts, 9 par équipe, le nombre de mots partagés, 3, et le nombre de tours, 9, sont fixes : aucun tirage.)
-3. **Clé de A** : on mélange les indices 0 à 24 ; les 9 premiers sont verts, les `mA` suivants noirs, le reste rouge.
-4. **Mots partagés** : on mélange les mots verts de A et on en garde 3.
-5. **Verts de B** : on mélange les mots qui ne sont **pas** verts pour A (ils peuvent être noirs ou rouges pour A) et on en garde 6 ; avec les 3 mots partagés, cela fait 9 verts pour B, dont **exactement** 3 sont aussi verts pour A.
-6. **Noirs de B** : on mélange les mots qui ne sont pas verts pour B (ils peuvent être verts pour A) et on en garde `mB`.
-7. **Tirage à pile ou face** pour l'équipe qui commence.
+2. **Clé de A** : on mélange les indices 0 à 24 ; les 9 premiers sont verts, les 3 suivants noirs, le reste rouge. (Les nombres de mots verts, 9 par équipe, de mots noirs, 3 par équipe, de mots partagés, 3, et de tours, 9, sont fixes : aucun tirage.)
+3. **Mots partagés** : on mélange les mots verts de A et on en garde 3.
+4. **Verts de B** : on mélange les mots qui ne sont **pas** verts pour A (ils peuvent être noirs ou rouges pour A) et on en garde 6 ; avec les 3 mots partagés, cela fait 9 verts pour B, dont **exactement** 3 sont aussi verts pour A.
+5. **Noirs de B** : on mélange les mots qui ne sont pas verts pour B (ils peuvent être verts, rouges ou noirs pour A) et on en garde 3.
+6. **Tirage à pile ou face** pour l'équipe qui commence.
 
-> L'ordre des tirages fait partie du format : le modifier change les parties associées à chaque seed. La liste de mots est **versionnée** pour la même raison (une seed n'est reproductible qu'avec la même version de la liste), de même que le format de l'état (`versionFormat`, passé à 3 avec les 9 mots par équipe, les 3 mots partagés et les 9 tours communs ; les parties sauvegardées dans un format précédent sont ignorées).
+> L'ordre des tirages fait partie du format : le modifier change les parties associées à chaque seed. La liste de mots est **versionnée** pour la même raison (une seed n'est reproductible qu'avec la même version de la liste), de même que le format de l'état (`versionFormat`, passé à 4 avec les 3 mots noirs par équipe ; les parties sauvegardées dans un format précédent sont ignorées).
 
 ### 3.3 Mots partagés et recoupements des clés
 
@@ -75,11 +74,11 @@ Les deux équipes se partagent **9 tours** : chaque indice donné, par l'une ou 
 
 ### 3.5 Équipe qui commence
 
-Les deux équipes ayant le même nombre de mots verts, l'équipe qui commence est **tirée au sort** (étape 7 de 3.2).
+Les deux équipes ayant le même nombre de mots verts, l'équipe qui commence est **tirée au sort** (étape 6 de 3.2).
 
 ### 3.6 « Changer les mots »
 
-Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, nombres de verts/noirs, clés, équipe qui commence). Les cases « prête » des deux équipes sont décochées.
+Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, clés, équipe qui commence). Les cases « prête » des deux équipes sont décochées.
 
 ---
 
@@ -346,7 +345,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 - Un script de test de développement, `tests/jeu.test.js`, non livré aux joueurs, lit `index.html`, extrait ces trois scripts et les exécute avec Node (`node:vm` et `node:test`, intégrés à Node, sans dépendance) : `node --test` (sans argument).
 - Cas à couvrir :
   - même seed ⇒ même partie ; seeds différentes ⇒ parties différentes ;
-  - 25 mots distincts ; dans chaque clé, exactement 9 verts et 1 à 2 noirs (1 et 2 apparaissent), sans recouvrement à l'intérieur d'une clé ;
+  - 25 mots distincts ; dans chaque clé, exactement 9 verts et 3 noirs, sans recouvrement à l'intérieur d'une clé ;
   - exactement 3 mots verts en commun entre les deux clés, soit 15 mots verts distincts ;
   - les autres combinaisons de couleurs entre clés (vert/noir, noir/noir…) apparaissent aussi ;
   - mot partagé : trouvé par une équipe, il compte pour les deux (restants, victoire, jamais compté deux fois) ; mot non partagé : seule la clé de la donneuse avance ;
@@ -379,7 +378,7 @@ Tout tient dans **`index.html`**, organisé en sections clairement délimitées 
 |---|---|
 | Mots dans la grille | 25 |
 | Mots verts par équipe | 9, mots partagés inclus (15 mots verts distincts en tout) |
-| Mots noirs par équipe | 1 à 2 (indépendants pour A et B) |
+| Mots noirs par équipe | 3 |
 | Mots partagés (verts des deux côtés) | 3, lesquels est inconnu des joueurs ; trouvés par une équipe, ils comptent pour les deux |
 | Autres recoupements entre les clés | Libres (vert/noir, noir/noir, rouge/vert…) |
 | Tours | 9 en tout, communs aux deux équipes |
@@ -396,6 +395,7 @@ Aucune pour l'instant.
 
 Décisions récentes :
 
-- **Paramètres de la partie** (remplacent les tirages 7 à 10 mots, 0 à 4 mots partagés et ⌈n/2⌉ tours par équipe) : 9 mots verts par équipe, 3 mots partagés, 9 tours en tout communs aux deux équipes. Les mots noirs restent à 1 ou 2 par équipe.
+- **Paramètres de la partie** (remplacent les tirages 7 à 10 mots, 0 à 4 mots partagés, 1 à 2 mots noirs et ⌈n/2⌉ tours par équipe) : 9 mots verts par équipe, 3 mots partagés, 9 tours en tout communs aux deux équipes.
+- **Mots noirs** : 3 par équipe (au lieu de 1 ou 2). Les noirs de B sont tirés parmi les mots qui ne sont pas verts pour B ; un mot noir pour une équipe peut donc être vert, rouge ou noir pour l'autre.
 - **Mots partagés** : verts pour les deux équipes ; trouvé par une équipe, un mot partagé compte pour les deux. Le jeu l'annonce au moment où il est trouvé.
 - L'équipe qui devine peut appuyer sur « Arrêter de deviner » **avant toute proposition** (elle passe alors son tour).

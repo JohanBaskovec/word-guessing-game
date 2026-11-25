@@ -508,9 +508,10 @@ button.carte:not(:disabled) { cursor: pointer; }
   var B = window.Banger = window.Banger || {};
   var R = B.Aleatoire;
 
-  var FORMAT = 3;
+  var FORMAT = 4;
   var NB_MOTS = 25;
   var NB_VERTS = 9;      // mots à faire deviner par équipe
+  var NB_NOIRS = 3;      // mots mortels par équipe
   var NB_PARTAGES = 3;   // mots verts pour les deux équipes
   var NB_TOURS = 9;      // tours (indices) en tout, communs aux deux équipes
   var ECRANS = ['preparation', 'compteARebours', 'passageDonneuse', 'indice', 'passageDevineuse', 'devinette', 'fin'];
@@ -553,19 +554,17 @@ button.carte:not(:disabled) { cursor: pointer; }
   }
 
   // Ordre des tirages (fait partie du format, voir docs/specification.md 3.2) :
-  // mots, mA, mB, mélange pour la clé de A, mélange des verts de A (choix des partagés),
+  // mots, mélange pour la clé de A, mélange des verts de A (choix des partagés),
   // mélange des autres mots (verts de B), mélange pour les noirs de B, pile ou face.
   function creerPartie(seed) {
     var graine = R.normaliserSeed(seed);
     var rng = R.creerPRNG(graine);
     var mots = R.melanger(B.MOTS, rng).slice(0, NB_MOTS);
-    var mA = R.entre(rng, 1, 2);
-    var mB = R.entre(rng, 1, 2);
 
-    // Clé de A : NB_VERTS verts puis mA noirs, parmi 25 mots mélangés.
+    // Clé de A : NB_VERTS verts puis NB_NOIRS noirs, parmi 25 mots mélangés.
     var ordreA = R.melanger(tousLesIndices(), rng);
     var vertsA = ordreA.slice(0, NB_VERTS);
-    var noirsA = ordreA.slice(NB_VERTS, NB_VERTS + mA);
+    var noirsA = ordreA.slice(NB_VERTS, NB_VERTS + NB_NOIRS);
 
     // Verts de B : exactement NB_PARTAGES verts de A (les mots partagés), le reste hors des verts de A.
     var partages = R.melanger(vertsA, rng).slice(0, NB_PARTAGES);
@@ -573,7 +572,7 @@ button.carte:not(:disabled) { cursor: pointer; }
     var vertsB = partages.concat(horsVertsA.slice(0, NB_VERTS - NB_PARTAGES));
 
     // Noirs de B : parmi les mots qui ne sont pas verts pour B (ils peuvent être verts pour A).
-    var noirsB = R.melanger(tousLesIndices().filter(function (i) { return vertsB.indexOf(i) < 0; }), rng).slice(0, mB);
+    var noirsB = R.melanger(tousLesIndices().filter(function (i) { return vertsB.indexOf(i) < 0; }), rng).slice(0, NB_NOIRS);
 
     var cleA = construireCle(vertsA, noirsA);
     var cleB = construireCle(vertsB, noirsB);
