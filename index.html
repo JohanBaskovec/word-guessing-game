@@ -230,7 +230,7 @@ button.carte:not(:disabled) { cursor: pointer; }
 (function () {
   'use strict';
   var B = window.Banger = window.Banger || {};
-  B.MOTS_VERSION = 1;
+  B.MOTS_VERSION = 2;
   B.MOTS = [
     // Animaux
     'chat', 'chien', 'cheval', 'vache', 'cochon', 'mouton', 'poule', 'canard', 'lapin', 'souris',
@@ -317,7 +317,112 @@ button.carte:not(:disabled) { cursor: pointer; }
     'télescope', 'microscope', 'carte', 'masque', 'costume', 'déguisement', 'fête', 'anniversaire', 'mariage', 'vacances',
     'voyage', 'aventure', 'monstre', 'piège', 'énigme', 'mystère', 'labyrinthe', 'calendrier', 'pile', 'prise',
     'câble', 'batterie', 'machine', 'outil', 'scie', 'pelle', 'râteau', 'tournevis', 'pinceau', 'encre',
-    'colle', 'timbre', 'passeport', 'ticket', 'trousse', 'cartable'
+    'colle', 'timbre', 'passeport', 'ticket', 'trousse', 'cartable',
+    // Animaux (suite)
+    'chaton', 'chiot', 'poussin', 'agneau', 'veau', 'taupe', 'castor', 'phoque', 'otarie', 'morse',
+    'lama', 'hamster', 'perruche', 'moineau', 'rossignol', 'canari', 'autruche', 'flamant', 'pélican', 'vautour',
+    'faucon', 'paon', 'dindon', 'oie', 'léopard', 'guépard', 'panthère', 'hyène', 'chimpanzé', 'koala',
+    'écrevisse', 'homard', 'moule', 'huître', 'saumon', 'thon', 'sardine', 'anguille', 'lézard', 'caméléon',
+    'salamandre', 'crapaud', 'sauterelle', 'criquet', 'libellule', 'scorpion', 'guêpe', 'puce', 'ver', 'limace',
+    'bison', 'élan', 'gazelle', 'antilope', 'buffle', 'dromadaire', 'mammouth', 'yéti', 'phénix', 'poney',
+    'bélier', 'tourterelle', 'cigale',
+    // Nourriture et boissons (suite)
+    'spaghetti', 'lasagne', 'ravioli', 'fondue', 'raclette', 'quiche', 'galette', 'brioche', 'beignet', 'macaron',
+    'meringue', 'chantilly', 'caramel', 'nougat', 'sirop', 'vinaigre', 'huile', 'farine', 'moutarde', 'ketchup',
+    'mayonnaise', 'kebab', 'tacos', 'sushi', 'couscous', 'paella', 'cassoulet', 'saucisson', 'camembert', 'roquefort',
+    'gruyère', 'mozzarella', 'cornichon', 'betterave', 'poireau', 'courgette', 'aubergine', 'poivron', 'brocoli', 'chou',
+    'épinard', 'lentille', 'artichaut', 'asperge', 'navet', 'noisette', 'amande', 'pistache', 'datte', 'figue',
+    'mangue', 'kiwi', 'mandarine', 'pamplemousse', 'groseille', 'myrtille', 'mûre', 'cola', 'limonade', 'champagne',
+    'cidre', 'cacao', 'sucette', 'gaufre', 'pancake', 'muffin', 'cookie', 'donut', 'cupcake', 'flan',
+    'compote', 'tartine', 'toast', 'céréales', 'muesli', 'repas', 'dîner', 'déjeuner', 'goûter', 'dessert',
+    'recette', 'menu',
+    // Maison et objets (suite)
+    'cheminée', 'grille', 'pelouse', 'portail', 'clôture', 'sonnette', 'interrupteur', 'ampoule', 'fauteuil', 'tabouret',
+    'banc', 'commode', 'vitre', 'volet', 'plafond', 'sol', 'parquet', 'carrelage', 'cadre', 'vase',
+    'coussin', 'drap', 'hamac', 'berceau', 'biberon', 'tétine', 'landau', 'poussette', 'agrafeuse', 'calculatrice',
+    'craie', 'feutre', 'compas', 'dictionnaire', 'atlas', 'globe', 'classeur', 'cintre', 'aspirateur', 'bouilloire',
+    'cafetière', 'mixeur', 'théière', 'cocotte', 'louche', 'spatule', 'fouet', 'passoire', 'râpe', 'planche',
+    'tablier', 'torchon', 'nappe', 'carafe', 'pichet', 'gobelet', 'paille', 'plateau', 'couvert', 'thermomètre',
+    'balance', 'loupe', 'pince', 'vis', 'boulon', 'perceuse', 'hache', 'arrosoir', 'tondeuse', 'brouette',
+    'balançoire', 'toboggan', 'yoyo', 'toupie', 'domino', 'cubes', 'marionnette', 'trampoline',
+    // Vêtements et accessoires
+    'jupe', 'short', 'maillot', 'veste', 'blouson', 'pull', 'gilet', 'jean', 'sandale', 'botte',
+    'pantoufle', 'lacet', 'poche', 'col', 'manche', 'bretelle', 'cape', 'uniforme', 'bijou', 'broche',
+    'bracelet', 'foulard', 'mouchoir', 'portefeuille', 'peigne', 'rasoir', 'parfum', 'maquillage', 'vernis', 'dentifrice',
+    'shampoing',
+    // Transports (suite)
+    'autoroute', 'carrefour', 'parking', 'station', 'quai', 'wagon', 'locomotive', 'rail', 'péage', 'camionnette',
+    'scooter', 'trottinette', 'tricycle', 'skateboard', 'caravane', 'remorque', 'bicyclette', 'planeur', 'montgolfière', 'parachute',
+    'paquebot', 'voilier', 'canoë', 'kayak', 'péniche', 'ferry', 'yacht', 'ovni',
+    // Lieux (suite)
+    'immeuble', 'ascenseur', 'couloir', 'entrée', 'cour', 'salle', 'classe', 'cantine', 'gymnase', 'laboratoire',
+    'atelier', 'crèche', 'université', 'collège', 'lycée', 'commissariat', 'caserne', 'tribunal', 'poste', 'douane',
+    'frontière', 'mosquée', 'synagogue', 'cimetière', 'manège', 'aquarium', 'patinoire', 'pâtisserie', 'boucherie', 'librairie',
+    'fleuriste', 'épicerie', 'kiosque', 'abri', 'forteresse', 'donjon', 'ruine', 'manoir', 'villa', 'appartement',
+    'studio', 'cabine', 'caverne', 'nid', 'terrier', 'ruche', 'étable', 'écurie', 'poulailler', 'grange',
+    'verger', 'vignoble', 'potager', 'serre', 'mare', 'étang', 'ruisseau', 'rivage', 'côte', 'golfe',
+    'baie', 'archipel', 'continent', 'pôle', 'équateur',
+    // Nature, saisons et temps
+    'rosée', 'givre', 'verglas', 'grêle', 'averse', 'rafale', 'ouragan', 'avalanche', 'inondation', 'sécheresse',
+    'incendie', 'foudre', 'tonnerre', 'aurore', 'crépuscule', 'aube', 'midi', 'minuit', 'matin', 'soir',
+    'été', 'hiver', 'printemps', 'automne', 'saison', 'semaine', 'mois', 'année', 'siècle', 'heure',
+    'minute', 'seconde', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche', 'janvier',
+    'février', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+    'lierre', 'mousse', 'fougère', 'ronce', 'épine', 'chêne', 'bouleau', 'saule', 'pin', 'olivier',
+    'cerisier', 'pommier', 'vigne', 'blé', 'foin', 'pâquerette', 'marguerite', 'tournesol', 'coquelicot', 'violette',
+    'lavande', 'muguet', 'orchidée', 'bouquet', 'pétale', 'galaxie', 'comète', 'astéroïde', 'météorite', 'éclipse',
+    'univers', 'constellation', 'boue', 'poussière', 'flaque', 'goutte', 'vague', 'marée', 'écume', 'récif',
+    'lagon', 'dune', 'oasis', 'savane', 'glacier', 'iceberg', 'banquise', 'cratère', 'lave', 'cristal',
+    'cuivre', 'charbon', 'pétrole', 'électricité',
+    // Corps et santé
+    'poumon', 'estomac', 'cuisse', 'mollet', 'cheville', 'poignet', 'nuque', 'menton', 'gorge', 'larme',
+    'sueur', 'rhume', 'fièvre', 'toux', 'bandage', 'pansement', 'plâtre', 'seringue', 'médicament', 'pilule',
+    'vaccin', 'béquille', 'stéthoscope', 'cicatrice', 'bosse', 'rire', 'sourire', 'baiser', 'câlin',
+    // Personnes, métiers, personnages (suite)
+    'garçon', 'fille', 'homme', 'femme', 'dame', 'monsieur', 'madame', 'adolescent', 'adulte', 'jumeau',
+    'cousin', 'cousine', 'neveu', 'nièce', 'parrain', 'marraine', 'mari', 'couple', 'famille', 'équipe',
+    'foule', 'bande', 'client', 'touriste', 'passager', 'voyageur', 'invité', 'patron', 'employé', 'ouvrier',
+    'maçon', 'menuisier', 'électricien', 'mécanicien', 'chauffeur', 'livreur', 'caissier', 'vendeur', 'marchand', 'pêcheur',
+    'chasseur', 'bûcheron', 'forgeron', 'tailleur', 'cordonnier', 'secrétaire', 'directeur', 'ministre', 'maire', 'gendarme',
+    'inspecteur', 'prisonnier', 'bandit', 'ingénieur', 'scientifique', 'inventeur', 'explorateur', 'aventurier', 'plongeur', 'skieur',
+    'cycliste', 'gardien', 'entraîneur', 'supporter', 'spectateur', 'public', 'chef', 'pâtissier', 'poète', 'auteur',
+    'sculpteur', 'photographe', 'comédien', 'jongleur', 'acrobate', 'dompteur', 'bouffon', 'empereur', 'paysan', 'pharaon',
+    'gladiateur', 'viking', 'samouraï', 'ninja', 'mousquetaire', 'druide', 'génie', 'lutin', 'troll', 'elfe',
+    'cyclope', 'minotaure', 'centaure', 'sphinx', 'zombie',
+    // Géographie (suite)
+    'Pékin', 'Moscou', 'Bruxelles', 'Genève', 'Lisbonne', 'Athènes', 'Amsterdam', 'Barcelone', 'Naples', 'Milan',
+    'Florence', 'Dublin', 'Istanbul', 'Jérusalem', 'Bangkok', 'Sydney', 'Hollywood', 'Californie', 'Texas', 'Floride',
+    'Alaska', 'Hawaï', 'Cuba', 'Argentine', 'Pérou', 'Colombie', 'Maroc', 'Algérie', 'Tunisie', 'Sénégal',
+    'Madagascar', 'Kenya', 'Turquie', 'Irlande', 'Écosse', 'Pologne', 'Suède', 'Norvège', 'Danemark', 'Finlande',
+    'Islande', 'Autriche', 'Hollande', 'Luxembourg', 'Monaco', 'Tahiti', 'Corée', 'Vietnam', 'Thaïlande', 'Himalaya',
+    'Everest', 'Pyrénées', 'Alsace', 'Provence', 'Bordeaux', 'Toulouse', 'Nice', 'Lille', 'Nantes', 'Strasbourg',
+    'Cannes', 'Seine', 'Loire', 'Rhône', 'Nil', 'Amazone', 'Tamise', 'Danube', 'Pacifique', 'Arctique',
+    'Caraïbes', 'Orient', 'Montmartre', 'Colisée', 'Acropole',
+    // Personnalités et personnages (suite)
+    'Gandhi', 'Mandela', 'Churchill', 'Charlemagne', 'Pasteur', 'Newton', 'Galilée', 'Darwin', 'Monet', 'Beethoven',
+    'Shakespeare', 'Voltaire', 'Gagarine', 'Messi', 'Zidane', 'Chaplin', 'Elvis', 'Bambi', 'Dumbo', 'Simba',
+    'Mowgli', 'Nemo', 'Olaf', 'Mulan', 'Garfield', 'Snoopy', 'Panoramix', 'Idéfix', 'Babar', 'Pokémon',
+    'Mario', 'Sonic', 'Zelda', 'Minecraft', 'Tetris', 'Lego', 'Playmobil', 'Barbie', 'Hulk', 'Thor',
+    'Spiderman', 'Joker', 'Frankenstein', 'Godzilla', 'Yoda', 'Gandalf', 'Gulliver', 'Excalibur', 'Poséidon', 'Cupidon',
+    'Atlantide', 'Ulysse', 'Troie',
+    // Sport et loisirs (suite)
+    'handball', 'baseball', 'hockey', 'badminton', 'escrime', 'équitation', 'gymnastique', 'athlétisme', 'marathon', 'sprint',
+    'saut', 'javelot', 'haltère', 'plongeon', 'randonnée', 'escalade', 'barbecue', 'bowling', 'billard', 'poker',
+    'loto', 'Scrabble', 'quiz', 'carnaval', 'défilé', 'confettis', 'guirlande', 'cloche',
+    // Arts, musique et médias (suite)
+    'dessin', 'roman', 'poème', 'conte', 'fable', 'page', 'série', 'publicité', 'affiche', 'album',
+    'disque', 'rock', 'jazz', 'opéra', 'ballet', 'accordéon', 'harpe', 'saxophone', 'clarinette', 'xylophone',
+    'harmonica', 'note', 'mélodie',
+    // Technologie et construction
+    'tablette', 'smartphone', 'application', 'site', 'message', 'logiciel', 'imprimante', 'drone', 'laser', 'radar',
+    'aimant', 'engrenage', 'tuyau', 'chantier', 'grue', 'bulldozer', 'brique', 'tuile', 'éolienne', 'barrage',
+    // Idées, formes et divers (suite)
+    'liberté', 'justice', 'courage', 'chance', 'bonheur', 'peur', 'joie', 'surprise', 'silence', 'bruit',
+    'voix', 'cri', 'sommeil', 'cauchemar', 'idée', 'question', 'réponse', 'problème', 'solution', 'erreur',
+    'mensonge', 'vérité', 'promesse', 'souvenir', 'talent', 'record', 'prix', 'concours', 'examen', 'diplôme',
+    'leçon', 'devoir', 'récréation', 'loi', 'vote', 'hymne', 'armée', 'bataille', 'victoire', 'paix',
+    'trône', 'police', 'alarme', 'danger', 'bouée', 'boule', 'cube', 'cercle', 'carré', 'triangle',
+    'ligne', 'point', 'croix', 'trèfle', 'chiffre', 'nombre', 'alphabet', 'code'
   ];
 })();
 </script>

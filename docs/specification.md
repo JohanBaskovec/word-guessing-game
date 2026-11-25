@@ -86,7 +86,8 @@ Génère une **nouvelle seed** et donc une partie entièrement nouvelle (mots, n
 - Uniquement des **noms communs** et **noms propres** **très connus de tous**, adultes comme enfants (ex. : *chat*, *maison*, *soleil*, *pomme*, *Paris*, *Napoléon*, *Lune*…).
 - À éviter : mots rares, techniques, régionaux, argotiques, vulgaires ou choquants, mots composés de plusieurs mots si possible.
 - Pas de doublons (comparaison insensible à la casse et aux accents).
-- Taille : environ **700 mots** (version 1), pour limiter les répétitions d'une partie à l'autre. Un test vérifie l'absence de doublons et d'un minimum de 400 mots.
+- Taille : environ **1 500 mots** (version 2 ; la version 1 en comptait 682), pour limiter les répétitions d'une partie à l'autre. Un test vérifie l'absence de doublons et un minimum de 1 000 mots.
+- Les noms de couleurs (rouge, vert, noir…) sont exclus de la liste, pour ne pas les confondre avec les couleurs des cartes.
 - Longueur : majoritairement des mots courts ou moyens ; les mots longs (> 12 lettres) sont acceptés mais rares, car ils occupent une ligne entière.
 
 ---

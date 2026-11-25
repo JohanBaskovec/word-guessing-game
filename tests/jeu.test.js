@@ -87,7 +87,7 @@ test('liste de mots : sans doublons, mots simples, taille suffisante', () => {
     assert.ok(!vus.has(n), 'doublon : ' + mot + ' / ' + vus.get(n));
     vus.set(n, mot);
   }
-  assert.ok(B.MOTS.length >= 400, 'seulement ' + B.MOTS.length + ' mots');
+  assert.ok(B.MOTS.length >= 1000, 'seulement ' + B.MOTS.length + ' mots');
   assert.equal(typeof B.MOTS_VERSION, 'number');
 });
 
